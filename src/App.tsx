@@ -1,4 +1,9 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import "./App.css";
 
 type Tab = "text" | "pdf";
@@ -136,14 +141,29 @@ function App() {
   }, []);
 
   useEffect(() => {
-    const savedToken = localStorage.getItem("vidora_token");
-    const savedUser = localStorage.getItem("vidora_user");
-    if (savedToken && savedUser) {
-      setToken(savedToken);
-      setUser(JSON.parse(savedUser));
-      loadBillingStatus(savedToken);
-    }
-  }, []);
+  const savedToken = localStorage.getItem("vidora_token");
+  const savedUser = localStorage.getItem("vidora_user");
+
+  if (savedToken && savedUser) {
+    setToken(savedToken);
+    setUser(JSON.parse(savedUser));
+
+    (async () => {
+      try {
+        const res = await fetch(API + "/billing/status", {
+          headers: {
+            Authorization: "Bearer " + savedToken,
+          },
+        });
+
+        if (!res.ok) return;
+
+        const data: BillingStatus = await res.json();
+        setBillingStatus(data);
+      } catch {}
+    })();
+  }
+}, []);
 
   const saveAuth = (tok: string, usr: User) => {
     setToken(tok);
@@ -178,40 +198,48 @@ function App() {
     }
   };
 
-  const loadBillingStatus = async (tok?: string) => {
-    const useToken = tok || token;
-    if (!useToken) return;
-    try {
-      const res = await fetch(API + "/billing/status", {
-        headers: { Authorization: "Bearer " + useToken },
-      });
-      if (!res.ok) {
-        setBillingStatus(null);
-        return;
-      }
-      const data: BillingStatus = await res.json();
-      setBillingStatus(data);
+  const loadBillingStatus = useCallback(async (tok?: string) => {
+  const useToken = tok || token;
+  if (!useToken) return;
 
-      if (data.languages && data.languages.length > 0) {
-        setSelectedLanguage((prevLang) => {
-          const lang = data.languages.includes(prevLang) ? prevLang : data.languages[0];
-          const voices = data.voices_by_language?.[lang] || [];
-          setSelectedVoice((prevVoice) =>
-            voices.includes(prevVoice) ? prevVoice : voices[0] || ""
-          );
-          return lang;
-        });
-      }
+  try {
+    const res = await fetch(API + "/billing/status", {
+      headers: { Authorization: "Bearer " + useToken },
+    });
 
-      if (data.durations && data.durations.length > 0) {
-        setSelectedDuration((prev) =>
-          data.durations.includes(prev) ? prev : data.durations[0]
-        );
-      }
-    } catch {
+    if (!res.ok) {
       setBillingStatus(null);
+      return;
     }
-  };
+
+    const data: BillingStatus = await res.json();
+    setBillingStatus(data);
+
+    if (data.languages && data.languages.length > 0) {
+      setSelectedLanguage((prevLang) => {
+        const lang = data.languages.includes(prevLang)
+          ? prevLang
+          : data.languages[0];
+
+        const voices = data.voices_by_language?.[lang] || [];
+
+        setSelectedVoice((prevVoice) =>
+          voices.includes(prevVoice) ? prevVoice : voices[0] || ""
+        );
+
+        return lang;
+      });
+    }
+
+    if (data.durations && data.durations.length > 0) {
+      setSelectedDuration((prev) =>
+        data.durations.includes(prev) ? prev : data.durations[0]
+      );
+    }
+  } catch {
+    setBillingStatus(null);
+  }
+}, [token]);
 
   const handleLanguageChange = (lang: string) => {
     setSelectedLanguage(lang);
