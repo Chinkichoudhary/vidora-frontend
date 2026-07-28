@@ -327,6 +327,7 @@ function App() {
     setSubscribeLoading(planKey);
     setSubscribeError(null);
     try {
+      console.log("Token:", token);
       const res = await fetch(API + "/billing/create-subscription", {
         method: "POST",
         headers: {
@@ -398,10 +399,9 @@ function App() {
   };
 
   const isReady =
-    activeTab === "text"
-      ? textInput.trim().length > 20
-      : selectedFile !== null;
-
+  activeTab === "text"
+    ? (console.log("Text length:", textInput.length), textInput.trim().length > 20)
+    : (console.log("Selected file:", selectedFile), selectedFile !== null);
   const delay = (ms: number) =>
     new Promise((resolve) => setTimeout(resolve, ms));
 
