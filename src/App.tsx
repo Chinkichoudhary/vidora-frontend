@@ -50,7 +50,7 @@ const INITIAL_STEPS: ProgressStep[] = [
   { id: "finalizing", label: "Finalizing your video", status: "waiting" },
 ];
 
-const API = "https://p01--vidora-backend-app--mtt2dhqgt79p.code.run";
+const API = "https://vidora-backend-561900479161.asia-south1.run.app";
 const GOOGLE_CLIENT_ID = "561900479161-bqs4r2lo7qflfcr1v03arli1t8ppico8.apps.googleusercontent.com";
 
 const PLAN_DISPLAY: Record<string, { name: string; price: string; features: string[] }> = {
