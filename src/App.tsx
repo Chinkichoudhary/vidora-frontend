@@ -51,7 +51,7 @@ const INITIAL_STEPS: ProgressStep[] = [
 ];
 
 
-const API = "https://vidora-backend-app.onrender.com";
+const API = "https://vidora-backend-app-production-2235.up.railway.app";
 const GOOGLE_CLIENT_ID = "561900479161-bqs4r2lo7qflfcr1v03arli1t8ppico8.apps.googleusercontent.com";
 
 const PLAN_DISPLAY: Record<string, { name: string; price: string; features: string[] }> = {
