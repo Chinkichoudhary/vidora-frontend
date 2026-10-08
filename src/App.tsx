@@ -52,7 +52,7 @@ const INITIAL_STEPS: ProgressStep[] = [
 
 
 const API = "https://vidora-backend-app-production-2235.up.railway.app";
-const GOOGLE_CLIENT_ID = "561900479161-bqs4r2lo7qflfcr1v03arli1t8ppico8.apps.googleusercontent.com";
+const GOOGLE_CLIENT_ID = "491948311246-o7cj3m66mth7d6jv7omlmr4geh45b024.apps.googleusercontent.com";
 
 const PLAN_DISPLAY: Record<string, { name: string; price: string; features: string[] }> = {
   free: {
