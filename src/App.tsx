@@ -619,6 +619,14 @@ function App() {
           <div className="logo-icon">V</div>
           <span className="logo-text">Vidora</span>
         </div>
+
+        <div className="nav-center">
+          <span className="nav-link">Features</span>
+          <span className="nav-link">Pricing</span>
+          <span className="nav-link">How It Works</span>
+          <span className="nav-link">FAQ</span>
+        </div>
+
         <div className="nav-right">
           {!isPureHome && (
             <button
@@ -1127,13 +1135,13 @@ function App() {
       <section className="hero">
         <div className="hero-badge">Powered by AI</div>
         <h1 className="hero-title">
-          Turn Any Topic Into an
+          Turn any topic into an
           <br />
-          <span>Educational Video</span>
+          <span>amazing learning video</span>
         </h1>
         <p className="hero-subtitle">
-          Type a topic, paste your notes, or upload a PDF. Vidora generates a
-          fully narrated, animated educational video in minutes.
+          Vidora is your all-in-one AI workspace — built to think, plan, and
+          collaborate alongside your team.
         </p>
 
         {!user && (
@@ -1143,18 +1151,10 @@ function App() {
               style={{ padding: "14px 32px", fontSize: 16 }}
               onClick={() => setScreen("signup")}
             >
-              Get Started Free
-            </button>
-            <button
-              className="nav-btn outline"
-              style={{ padding: "14px 32px", fontSize: 16 }}
-              onClick={() => setScreen("login")}
-            >
-              Login
+              Get Started Here →
             </button>
           </div>
         )}
-
         <div className="main-card" style={{ marginTop: user ? 0 : 32 }}>
           <div className="tabs">
             <button

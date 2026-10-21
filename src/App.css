@@ -30,7 +30,27 @@ body {
   z-index: 100;
   backdrop-filter: blur(10px);
 }
+.nav-center {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
 
+.nav-link {
+  font-size: 14px;
+  font-weight: 600;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  font-family: sans-serif;
+}
+
+.nav-link:hover {
+  color: #ffffff;
+}
 .logo {
   display: flex;
   align-items: center;
