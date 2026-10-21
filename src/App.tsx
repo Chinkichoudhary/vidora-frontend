@@ -622,7 +622,13 @@ function App() {
 
         <div className="nav-center">
           <span className="nav-link">Features</span>
-          <span className="nav-link">Pricing</span>
+          <span
+            className="nav-link"
+            onClick={() => setScreen("pricing")}
+            style={{ cursor: "pointer" }}
+          >
+            Pricing
+          </span>
           <span className="nav-link">How It Works</span>
           <span className="nav-link">FAQ</span>
         </div>
@@ -635,15 +641,6 @@ function App() {
               style={{ marginRight: 10 }}
             >
               Home
-            </button>
-          )}
-          {screen !== "pricing" && (
-            <button
-              className="nav-btn outline"
-              onClick={() => setScreen("pricing")}
-              style={{ marginRight: 10 }}
-            >
-              Pricing
             </button>
           )}
           {user ? (
@@ -1155,163 +1152,191 @@ function App() {
             </button>
           </div>
         )}
-        <div className="main-card" style={{ marginTop: user ? 0 : 32 }}>
-          <div className="tabs">
+
+        <div className="hero-workspace" style={{ marginTop: user ? 0 : 32 }}>
+          <div className="main-card" style={{ marginTop: 0 }}>
+            <div className="tabs">
+              <button
+                className={"tab " + (activeTab === "text" ? "active" : "")}
+                onClick={() => setActiveTab("text")}
+              >
+                Type Topic or Paste Notes
+              </button>
+              <button
+                className={"tab " + (activeTab === "pdf" ? "active" : "")}
+                onClick={() => setActiveTab("pdf")}
+              >
+                Upload PDF
+              </button>
+            </div>
+
+            {activeTab === "text" && (
+              <div>
+                <label className="input-label">Your Topic or Notes</label>
+                <textarea
+                  className="text-input"
+                  placeholder="e.g. Explain how the human brain works..."
+                  value={textInput}
+                  onChange={(e) => setTextInput(e.target.value)}
+                />
+                <div
+                  style={{
+                    fontSize: 12,
+                    color: "#334155",
+                    marginTop: 8,
+                    textAlign: "right",
+                  }}
+                >
+                  {textInput.length} characters
+                </div>
+              </div>
+            )}
+
+            {activeTab === "pdf" && (
+              <div>
+                <label className="input-label">Upload PDF</label>
+                <div
+                  className={"upload-zone " + (isDragOver ? "dragover" : "")}
+                  onClick={() => fileInputRef.current?.click()}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setIsDragOver(true);
+                  }}
+                  onDragLeave={() => setIsDragOver(false)}
+                  onDrop={handleDrop}
+                >
+                  <div className="upload-icon">PDF</div>
+                  <div className="upload-text">
+                    Drop your PDF here or click to browse
+                  </div>
+                  <div className="upload-subtext">
+                    Research papers, textbook chapters, notes
+                  </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".pdf"
+                    style={{ display: "none" }}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleFileSelect(file);
+                    }}
+                  />
+                </div>
+                {selectedFile && (
+                  <div className="file-selected">
+                    <span className="file-name">{selectedFile.name}</span>
+                    <span style={{ fontSize: 12, color: "#475569" }}>
+                      {(selectedFile.size / 1024).toFixed(0)} KB
+                    </span>
+                    <button
+                      className="file-remove"
+                      onClick={() => setSelectedFile(null)}
+                    >
+                      X
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {user && billingStatus && (
+              billingStatus.has_audio ? (
+                <>
+                  <div style={{ marginTop: 20, marginBottom: 4 }}>
+                    <label className="input-label">Narration Language</label>
+                    <select
+                      className="auth-input"
+                      value={selectedLanguage}
+                      onChange={(e) => handleLanguageChange(e.target.value)}
+                      style={{ marginTop: 8 }}
+                    >
+                      {billingStatus.languages.map((lang) => (
+                        <option key={lang} value={lang}>
+                          {lang.charAt(0).toUpperCase() + lang.slice(1)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div style={{ marginTop: 16, marginBottom: 4 }}>
+                    <label className="input-label">Narrator Voice</label>
+                    <select
+                      className="auth-input"
+                      value={selectedVoice}
+                      onChange={(e) => setSelectedVoice(e.target.value)}
+                      style={{ marginTop: 8 }}
+                    >
+                      {(billingStatus.voices_by_language[selectedLanguage] || []).map((v) => (
+                        <option key={v} value={v}>
+                          {VOICE_LABELS[v] || v}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </>
+              ) : (
+                <div style={{ fontSize: 13, color: "#64748b", marginTop: 20, fontFamily: "sans-serif" }}>
+                  Your Free plan generates silent videos with no narration.{" "}
+                  <span className="auth-link" onClick={() => setScreen("pricing")}>
+                    Upgrade for voice narration
+                  </span>
+                </div>
+              )
+            )}
+
+            {user && billingStatus && billingStatus.durations.length > 0 && (
+              <div style={{ marginTop: 16, marginBottom: 4 }}>
+                <label className="input-label">Video Length</label>
+                <select
+                  className="auth-input"
+                  value={selectedDuration}
+                  onChange={(e) => setSelectedDuration(Number(e.target.value))}
+                  style={{ marginTop: 8 }}
+                >
+                  {billingStatus.durations.map((mins) => (
+                    <option key={mins} value={mins}>
+                      {mins} minute{mins !== 1 ? "s" : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             <button
-              className={"tab " + (activeTab === "text" ? "active" : "")}
-              onClick={() => setActiveTab("text")}
+              className="generate-btn"
+              onClick={handleGenerate}
+              disabled={!isReady}
+              style={{ marginTop: 20 }}
             >
-              Type Topic or Paste Notes
-            </button>
-            <button
-              className={"tab " + (activeTab === "pdf" ? "active" : "")}
-              onClick={() => setActiveTab("pdf")}
-            >
-              Upload PDF
+              Generate Video
             </button>
           </div>
 
-          {activeTab === "text" && (
-            <div>
-              <label className="input-label">Your Topic or Notes</label>
-              <textarea
-                className="text-input"
-                placeholder="e.g. Explain how the human brain works..."
-                value={textInput}
-                onChange={(e) => setTextInput(e.target.value)}
-              />
-              <div
-                style={{
-                  fontSize: 12,
-                  color: "#334155",
-                  marginTop: 8,
-                  textAlign: "right",
-                }}
-              >
-                {textInput.length} characters
+          <div className="preview-panel">
+            <div className="preview-panel-label">What you'll get</div>
+            <div className="scene-card">
+              <div className="scene-icon">🎯</div>
+              <div className="scene-text">
+                <div className="scene-title">Scene 1 · Introduction</div>
+                <div className="scene-sub">AI-written narration</div>
               </div>
             </div>
-          )}
-
-          {activeTab === "pdf" && (
-            <div>
-              <label className="input-label">Upload PDF</label>
-              <div
-                className={"upload-zone " + (isDragOver ? "dragover" : "")}
-                onClick={() => fileInputRef.current?.click()}
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  setIsDragOver(true);
-                }}
-                onDragLeave={() => setIsDragOver(false)}
-                onDrop={handleDrop}
-              >
-                <div className="upload-icon">PDF</div>
-                <div className="upload-text">
-                  Drop your PDF here or click to browse
-                </div>
-                <div className="upload-subtext">
-                  Research papers, textbook chapters, notes
-                </div>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".pdf"
-                  style={{ display: "none" }}
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) handleFileSelect(file);
-                  }}
-                />
+            <div className="scene-card offset">
+              <div className="scene-icon">📊</div>
+              <div className="scene-text">
+                <div className="scene-title">Scene 2 · Key Concept</div>
+                <div className="scene-sub">Animated visuals</div>
               </div>
-              {selectedFile && (
-                <div className="file-selected">
-                  <span className="file-name">{selectedFile.name}</span>
-                  <span style={{ fontSize: 12, color: "#475569" }}>
-                    {(selectedFile.size / 1024).toFixed(0)} KB
-                  </span>
-                  <button
-                    className="file-remove"
-                    onClick={() => setSelectedFile(null)}
-                  >
-                    X
-                  </button>
-                </div>
-              )}
             </div>
-          )}
-
-          {user && billingStatus && (
-            billingStatus.has_audio ? (
-              <>
-                <div style={{ marginTop: 20, marginBottom: 4 }}>
-                  <label className="input-label">Narration Language</label>
-                  <select
-                    className="auth-input"
-                    value={selectedLanguage}
-                    onChange={(e) => handleLanguageChange(e.target.value)}
-                    style={{ marginTop: 8 }}
-                  >
-                    {billingStatus.languages.map((lang) => (
-                      <option key={lang} value={lang}>
-                        {lang.charAt(0).toUpperCase() + lang.slice(1)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div style={{ marginTop: 16, marginBottom: 4 }}>
-                  <label className="input-label">Narrator Voice</label>
-                  <select
-                    className="auth-input"
-                    value={selectedVoice}
-                    onChange={(e) => setSelectedVoice(e.target.value)}
-                    style={{ marginTop: 8 }}
-                  >
-                    {(billingStatus.voices_by_language[selectedLanguage] || []).map((v) => (
-                      <option key={v} value={v}>
-                        {VOICE_LABELS[v] || v}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </>
-            ) : (
-              <div style={{ fontSize: 13, color: "#64748b", marginTop: 20, fontFamily: "sans-serif" }}>
-                Your Free plan generates silent videos with no narration.{" "}
-                <span className="auth-link" onClick={() => setScreen("pricing")}>
-                  Upgrade for voice narration
-                </span>
+            <div className="scene-card offset2">
+              <div className="scene-icon">✅</div>
+              <div className="scene-text">
+                <div className="scene-title">Scene 3 · Summary</div>
+                <div className="scene-sub">Voiceover + captions</div>
               </div>
-            )
-          )}
-
-          {user && billingStatus && billingStatus.durations.length > 0 && (
-            <div style={{ marginTop: 16, marginBottom: 4 }}>
-              <label className="input-label">Video Length</label>
-              <select
-                className="auth-input"
-                value={selectedDuration}
-                onChange={(e) => setSelectedDuration(Number(e.target.value))}
-                style={{ marginTop: 8 }}
-              >
-                {billingStatus.durations.map((mins) => (
-                  <option key={mins} value={mins}>
-                    {mins} minute{mins !== 1 ? "s" : ""}
-                  </option>
-                ))}
-              </select>
             </div>
-          )}
-
-          <button
-            className="generate-btn"
-            onClick={handleGenerate}
-            disabled={!isReady}
-            style={{ marginTop: 20 }}
-          >
-            Generate Video
-          </button>
+          </div>
         </div>
       </section>
 

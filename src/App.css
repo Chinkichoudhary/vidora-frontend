@@ -5,7 +5,12 @@
 }
 
 body {
-  background: #0f172a;
+  background: #07020f;
+  background-image:
+    radial-gradient(ellipse 700px 500px at 0% 0%, rgba(236, 72, 153, 0.35) 0%, transparent 60%),
+    radial-gradient(ellipse 700px 500px at 100% 0%, rgba(168, 85, 247, 0.4) 0%, transparent 60%),
+    radial-gradient(ellipse 900px 600px at 50% 100%, rgba(236, 72, 153, 0.2) 0%, transparent 60%);
+  background-attachment: fixed;
   color: #ffffff;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   min-height: 100vh;
@@ -145,6 +150,104 @@ body {
   max-width: 550px;
   margin: 0 auto 50px;
   line-height: 1.6;
+}
+
+/* ── HERO WORKSPACE (main card + preview panel) ── */
+.hero-workspace {
+  display: flex;
+  gap: 24px;
+  max-width: 1040px;
+  margin: 0 auto;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.hero-workspace .main-card {
+  flex: 1.3;
+}
+
+.preview-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 20px;
+}
+
+.preview-panel-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #818cf8;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+.scene-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(30, 27, 75, 0.55);
+  border: 1px solid rgba(236, 72, 153, 0.25);
+  border-radius: 16px;
+  padding: 18px 20px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+  transition: transform 0.2s ease;
+}
+
+.scene-card:hover {
+  transform: translateY(-3px);
+}
+
+.scene-card.offset {
+  margin-left: 20px;
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+.scene-card.offset2 {
+  margin-left: 40px;
+  border-color: rgba(6, 182, 212, 0.3);
+}
+
+.scene-icon {
+  font-size: 26px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(99, 102, 241, 0.15);
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.scene-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.scene-sub {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+@media (max-width: 900px) {
+  .hero-workspace {
+    flex-direction: column;
+    align-items: center;
+  }
+  .preview-panel {
+    width: 100%;
+    max-width: 440px;
+    padding-top: 0;
+  }
+  .scene-card.offset,
+  .scene-card.offset2 {
+    margin-left: 0;
+  }
 }
 
 /* ── MAIN CARD ── */
@@ -410,10 +513,6 @@ body {
     grid-template-columns: 1fr;
   }
 }
-
-
-
-
 
 /* ── LOADING SCREEN ── */
 .loading-screen {
@@ -708,9 +807,6 @@ body {
   background: rgba(99, 102, 241, 0.2);
 }
 
-
-
-
 .video-meta {
   display: flex;
   gap: 10px;
@@ -735,9 +831,6 @@ body {
   color: #475569;
   text-align: center;
 }
-
-
-
 
 /* ── NAVBAR RIGHT ── */
 .nav-right { display: flex; align-items: center; }
@@ -965,7 +1058,6 @@ body {
   font-weight: 600;
 }
 
-
 .auth-divider {
   display: flex;
   align-items: center;
@@ -985,8 +1077,6 @@ body {
   font-family: sans-serif;
   white-space: nowrap;
 }
-
-
 
 /* ── PRICING SCREEN ── */
 .pricing-screen {
