@@ -1336,12 +1336,7 @@ function App() {
               </p>
             </div>
             <div className="feature-visual">
-              <div className="mock-card">
-                <div className="mock-icon">📄</div>
-                <div className="mock-line" />
-                <div className="mock-line short" />
-                <div className="mock-line" />
-              </div>
+                <img src="/images/step1-reading.jpg" alt="Reading your content" className="feature-img" />
             </div>
           </section>
 
@@ -1356,12 +1351,7 @@ function App() {
               </p>
             </div>
             <div className="feature-visual">
-              <div className="mock-card">
-                <div className="mock-icon">✍️</div>
-                <div className="mock-line" />
-                <div className="mock-line" />
-                <div className="mock-line short" />
-              </div>
+              <img src="/images/step2-reading.jpg" alt="Reading your content" className="feature-img" />
             </div>
           </section>
 
@@ -1375,12 +1365,7 @@ function App() {
               </p>
             </div>
             <div className="feature-visual">
-              <div className="mock-card">
-                <div className="mock-icon">🎙️</div>
-                <div className="mock-wave">
-                  <span></span><span></span><span></span><span></span><span></span>
-                </div>
-              </div>
+              <img src="/images/step3-reading.jpg" alt="Reading your content" className="feature-img" />
             </div>
           </section>
 
@@ -1394,10 +1379,7 @@ function App() {
               </p>
             </div>
             <div className="feature-visual">
-              <div className="mock-card">
-                <div className="mock-icon">🎬</div>
-                <div className="mock-progress"><div className="mock-progress-fill" /></div>
-              </div>
+              <img src="/images/step4-reading.jpg" alt="Reading your content" className="feature-img" />
             </div>
           </section>
 
@@ -1411,11 +1393,7 @@ function App() {
               </p>
             </div>
             <div className="feature-visual">
-              <div className="mock-card">
-                <div className="mock-icon">✅</div>
-                <div className="mock-line" />
-                <div className="mock-line short" />
-              </div>
+              <img src="/images/step5-reading.jpg" alt="Reading your content" className="feature-img" />
             </div>
           </section>
 
@@ -1429,10 +1407,7 @@ function App() {
               </p>
             </div>
             <div className="feature-visual">
-              <div className="mock-card">
-                <div className="mock-icon">⬇️</div>
-                <div className="mock-pill">vidora-video.mp4</div>
-              </div>
+              <img src="/images/step6-reading.jpg" alt="Reading your content" className="feature-img" />
             </div>
           </section>
 
@@ -1454,14 +1429,7 @@ function App() {
               </div>
             </div>
             <div className="feature-visual">
-              <div className="mock-card">
-                <div className="mock-icon">🌐</div>
-                <div className="mock-tag-row">
-                  <span className="mock-tag">Hindi</span>
-                  <span className="mock-tag">Tamil</span>
-                  <span className="mock-tag">French</span>
-                </div>
-              </div>
+              <img src="/images/step7-reading.jpg" alt="Reading your content" className="feature-img" />
             </div>
           </section>
 
@@ -1475,16 +1443,7 @@ function App() {
               </p>
             </div>
             <div className="feature-visual">
-              <div className="mock-card">
-                <div className="mock-icon">📊</div>
-                <div className="mock-bars">
-                  <span style={{ height: "40%" }} />
-                  <span style={{ height: "70%" }} />
-                  <span style={{ height: "50%" }} />
-                  <span style={{ height: "90%" }} />
-                  <span style={{ height: "60%" }} />
-                </div>
-              </div>
+              <img src="/images/step8-reading.jpg" alt="Reading your content" className="feature-img" />
             </div>
           </section>
 
