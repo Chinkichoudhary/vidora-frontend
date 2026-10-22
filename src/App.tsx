@@ -130,7 +130,8 @@ function App() {
   const [selectedDuration, setSelectedDuration] = useState<number>(3);
   const [subscribeLoading, setSubscribeLoading] = useState<string | null>(null);
   const [subscribeError, setSubscribeError] = useState<string | null>(null);
-
+  const [showGenerator, setShowGenerator] = useState(false);
+  const generatorSectionRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const script = document.createElement("script");
     script.src = "https://checkout.razorpay.com/v1/checkout.js";
@@ -605,7 +606,171 @@ function App() {
       />
     );
   };
+    const renderGeneratorWorkspace = () => (
+    <div className="hero-workspace" style={{ marginTop: 0 }}>
+      <div className="main-card" style={{ marginTop: 0 }}>
+        <div className="tabs">
+          <button
+            className={"tab " + (activeTab === "text" ? "active" : "")}
+            onClick={() => setActiveTab("text")}
+          >
+            Type Topic or Paste Notes
+          </button>
+          <button
+            className={"tab " + (activeTab === "pdf" ? "active" : "")}
+            onClick={() => setActiveTab("pdf")}
+          >
+            Upload PDF
+          </button>
+        </div>
 
+        {activeTab === "text" && (
+          <div>
+            <label className="input-label">Your Topic or Notes</label>
+            <textarea
+              className="text-input"
+              placeholder="e.g. Explain how the human brain works..."
+              value={textInput}
+              onChange={(e) => setTextInput(e.target.value)}
+            />
+            <div style={{ fontSize: 12, color: "#334155", marginTop: 8, textAlign: "right" }}>
+              {textInput.length} characters
+            </div>
+          </div>
+        )}
+
+        {activeTab === "pdf" && (
+          <div>
+            <label className="input-label">Upload PDF</label>
+            <div
+              className={"upload-zone " + (isDragOver ? "dragover" : "")}
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+              onDragLeave={() => setIsDragOver(false)}
+              onDrop={handleDrop}
+            >
+              <div className="upload-icon">PDF</div>
+              <div className="upload-text">Drop your PDF here or click to browse</div>
+              <div className="upload-subtext">Research papers, textbook chapters, notes</div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf"
+                style={{ display: "none" }}
+                onChange={(e) => { const file = e.target.files?.[0]; if (file) handleFileSelect(file); }}
+              />
+            </div>
+            {selectedFile && (
+              <div className="file-selected">
+                <span className="file-name">{selectedFile.name}</span>
+                <span style={{ fontSize: 12, color: "#475569" }}>
+                  {(selectedFile.size / 1024).toFixed(0)} KB
+                </span>
+                <button className="file-remove" onClick={() => setSelectedFile(null)}>X</button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {user && billingStatus && (
+          billingStatus.has_audio ? (
+            <>
+              <div style={{ marginTop: 20, marginBottom: 4 }}>
+                <label className="input-label">Narration Language</label>
+                <select
+                  className="auth-input"
+                  value={selectedLanguage}
+                  onChange={(e) => handleLanguageChange(e.target.value)}
+                  style={{ marginTop: 8 }}
+                >
+                  {billingStatus.languages.map((lang) => (
+                    <option key={lang} value={lang}>
+                      {lang.charAt(0).toUpperCase() + lang.slice(1)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ marginTop: 16, marginBottom: 4 }}>
+                <label className="input-label">Narrator Voice</label>
+                <select
+                  className="auth-input"
+                  value={selectedVoice}
+                  onChange={(e) => setSelectedVoice(e.target.value)}
+                  style={{ marginTop: 8 }}
+                >
+                  {(billingStatus.voices_by_language[selectedLanguage] || []).map((v) => (
+                    <option key={v} value={v}>
+                      {VOICE_LABELS[v] || v}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </>
+          ) : (
+            <div style={{ fontSize: 13, color: "#64748b", marginTop: 20, fontFamily: "sans-serif" }}>
+              Your Free plan generates silent videos with no narration.{" "}
+              <span className="auth-link" onClick={() => setScreen("pricing")}>
+                Upgrade for voice narration
+              </span>
+            </div>
+          )
+        )}
+
+        {user && billingStatus && billingStatus.durations.length > 0 && (
+          <div style={{ marginTop: 16, marginBottom: 4 }}>
+            <label className="input-label">Video Length</label>
+            <select
+              className="auth-input"
+              value={selectedDuration}
+              onChange={(e) => setSelectedDuration(Number(e.target.value))}
+              style={{ marginTop: 8 }}
+            >
+              {billingStatus.durations.map((mins) => (
+                <option key={mins} value={mins}>
+                  {mins} minute{mins !== 1 ? "s" : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        <button
+          className="generate-btn"
+          onClick={handleGenerate}
+          disabled={!isReady}
+          style={{ marginTop: 20 }}
+        >
+          Generate Video
+        </button>
+      </div>
+
+      <div className="preview-panel">
+        <div className="preview-panel-label">What you'll get</div>
+        <div className="scene-card">
+          <div className="scene-icon">🎯</div>
+          <div className="scene-text">
+            <div className="scene-title">Scene 1 · Introduction</div>
+            <div className="scene-sub">AI-written narration</div>
+          </div>
+        </div>
+        <div className="scene-card offset">
+          <div className="scene-icon">📊</div>
+          <div className="scene-text">
+            <div className="scene-title">Scene 2 · Key Concept</div>
+            <div className="scene-sub">Animated visuals</div>
+          </div>
+        </div>
+        <div className="scene-card offset2">
+          <div className="scene-icon">✅</div>
+          <div className="scene-text">
+            <div className="scene-title">Scene 3 · Summary</div>
+            <div className="scene-sub">Voiceover + captions</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
   const Navbar = () => {
     const isPureHome = screen === "home" && !videoUrl && !isGenerating;
 
@@ -1126,7 +1291,7 @@ function App() {
     );
   }
 
-  return (
+    return (
     <div className="app">
       <Navbar />
       <section className="hero">
@@ -1146,226 +1311,212 @@ function App() {
             <button
               className="nav-btn"
               style={{ padding: "14px 32px", fontSize: 16 }}
-              onClick={() => setScreen("signup")}
+              onClick={() =>
+                generatorSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+              }
             >
               Get Started Here →
             </button>
           </div>
         )}
 
-        <div className="hero-workspace" style={{ marginTop: user ? 0 : 32 }}>
-          <div className="main-card" style={{ marginTop: 0 }}>
-            <div className="tabs">
-              <button
-                className={"tab " + (activeTab === "text" ? "active" : "")}
-                onClick={() => setActiveTab("text")}
-              >
-                Type Topic or Paste Notes
-              </button>
-              <button
-                className={"tab " + (activeTab === "pdf" ? "active" : "")}
-                onClick={() => setActiveTab("pdf")}
-              >
-                Upload PDF
-              </button>
-            </div>
-
-            {activeTab === "text" && (
-              <div>
-                <label className="input-label">Your Topic or Notes</label>
-                <textarea
-                  className="text-input"
-                  placeholder="e.g. Explain how the human brain works..."
-                  value={textInput}
-                  onChange={(e) => setTextInput(e.target.value)}
-                />
-                <div
-                  style={{
-                    fontSize: 12,
-                    color: "#334155",
-                    marginTop: 8,
-                    textAlign: "right",
-                  }}
-                >
-                  {textInput.length} characters
-                </div>
-              </div>
-            )}
-
-            {activeTab === "pdf" && (
-              <div>
-                <label className="input-label">Upload PDF</label>
-                <div
-                  className={"upload-zone " + (isDragOver ? "dragover" : "")}
-                  onClick={() => fileInputRef.current?.click()}
-                  onDragOver={(e) => {
-                    e.preventDefault();
-                    setIsDragOver(true);
-                  }}
-                  onDragLeave={() => setIsDragOver(false)}
-                  onDrop={handleDrop}
-                >
-                  <div className="upload-icon">PDF</div>
-                  <div className="upload-text">
-                    Drop your PDF here or click to browse
-                  </div>
-                  <div className="upload-subtext">
-                    Research papers, textbook chapters, notes
-                  </div>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".pdf"
-                    style={{ display: "none" }}
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) handleFileSelect(file);
-                    }}
-                  />
-                </div>
-                {selectedFile && (
-                  <div className="file-selected">
-                    <span className="file-name">{selectedFile.name}</span>
-                    <span style={{ fontSize: 12, color: "#475569" }}>
-                      {(selectedFile.size / 1024).toFixed(0)} KB
-                    </span>
-                    <button
-                      className="file-remove"
-                      onClick={() => setSelectedFile(null)}
-                    >
-                      X
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {user && billingStatus && (
-              billingStatus.has_audio ? (
-                <>
-                  <div style={{ marginTop: 20, marginBottom: 4 }}>
-                    <label className="input-label">Narration Language</label>
-                    <select
-                      className="auth-input"
-                      value={selectedLanguage}
-                      onChange={(e) => handleLanguageChange(e.target.value)}
-                      style={{ marginTop: 8 }}
-                    >
-                      {billingStatus.languages.map((lang) => (
-                        <option key={lang} value={lang}>
-                          {lang.charAt(0).toUpperCase() + lang.slice(1)}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div style={{ marginTop: 16, marginBottom: 4 }}>
-                    <label className="input-label">Narrator Voice</label>
-                    <select
-                      className="auth-input"
-                      value={selectedVoice}
-                      onChange={(e) => setSelectedVoice(e.target.value)}
-                      style={{ marginTop: 8 }}
-                    >
-                      {(billingStatus.voices_by_language[selectedLanguage] || []).map((v) => (
-                        <option key={v} value={v}>
-                          {VOICE_LABELS[v] || v}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </>
-              ) : (
-                <div style={{ fontSize: 13, color: "#64748b", marginTop: 20, fontFamily: "sans-serif" }}>
-                  Your Free plan generates silent videos with no narration.{" "}
-                  <span className="auth-link" onClick={() => setScreen("pricing")}>
-                    Upgrade for voice narration
-                  </span>
-                </div>
-              )
-            )}
-
-            {user && billingStatus && billingStatus.durations.length > 0 && (
-              <div style={{ marginTop: 16, marginBottom: 4 }}>
-                <label className="input-label">Video Length</label>
-                <select
-                  className="auth-input"
-                  value={selectedDuration}
-                  onChange={(e) => setSelectedDuration(Number(e.target.value))}
-                  style={{ marginTop: 8 }}
-                >
-                  {billingStatus.durations.map((mins) => (
-                    <option key={mins} value={mins}>
-                      {mins} minute{mins !== 1 ? "s" : ""}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            <button
-              className="generate-btn"
-              onClick={handleGenerate}
-              disabled={!isReady}
-              style={{ marginTop: 20 }}
-            >
-              Generate Video
-            </button>
-          </div>
-
-          <div className="preview-panel">
-            <div className="preview-panel-label">What you'll get</div>
-            <div className="scene-card">
-              <div className="scene-icon">🎯</div>
-              <div className="scene-text">
-                <div className="scene-title">Scene 1 · Introduction</div>
-                <div className="scene-sub">AI-written narration</div>
-              </div>
-            </div>
-            <div className="scene-card offset">
-              <div className="scene-icon">📊</div>
-              <div className="scene-text">
-                <div className="scene-title">Scene 2 · Key Concept</div>
-                <div className="scene-sub">Animated visuals</div>
-              </div>
-            </div>
-            <div className="scene-card offset2">
-              <div className="scene-icon">✅</div>
-              <div className="scene-text">
-                <div className="scene-title">Scene 3 · Summary</div>
-                <div className="scene-sub">Voiceover + captions</div>
-              </div>
-            </div>
-          </div>
-        </div>
+        {user && <div style={{ marginTop: 32 }}>{renderGeneratorWorkspace()}</div>}
       </section>
 
-      <section className="how-it-works">
-        <h2 className="section-title">How It Works</h2>
-        <div className="steps-grid">
-          <div className="step-card">
-            <div className="step-number">1</div>
-            <div className="step-title">Input Your Content</div>
-            <div className="step-desc">
-              Type a topic, paste your notes, or upload a PDF.
+      {!user && (
+        <>
+          <section className="feature-row">
+            <div className="feature-text">
+              <div className="feature-eyebrow">STEP 1 · INTAKE</div>
+              <h2 className="feature-title">We start by reading your content</h2>
+              <p className="feature-desc">
+                Paste a topic, drop in your notes, or upload a PDF. Vidora
+                scans and understands the material before writing a single
+                word of script.
+              </p>
             </div>
-          </div>
-          <div className="step-card">
-            <div className="step-number">2</div>
-            <div className="step-title">AI Generates Script</div>
-            <div className="step-desc">
-              Our AI creates scenes, narration, and visuals automatically.
+            <div className="feature-visual">
+              <div className="mock-card">
+                <div className="mock-icon">📄</div>
+                <div className="mock-line" />
+                <div className="mock-line short" />
+                <div className="mock-line" />
+              </div>
             </div>
-          </div>
-          <div className="step-card">
-            <div className="step-number">3</div>
-            <div className="step-title">Download Your Video</div>
-            <div className="step-desc">
-              Get a fully animated, narrated educational video ready to share.
+          </section>
+
+          <section className="feature-row reverse">
+            <div className="feature-text">
+              <div className="feature-eyebrow">STEP 2 · SCRIPT</div>
+              <h2 className="feature-title">AI writes your script</h2>
+              <p className="feature-desc">
+                Our model breaks your topic into clear scenes and writes
+                natural, easy-to-follow narration — tuned for teaching, not
+                just summarizing.
+              </p>
             </div>
-          </div>
-        </div>
-      </section>
+            <div className="feature-visual">
+              <div className="mock-card">
+                <div className="mock-icon">✍️</div>
+                <div className="mock-line" />
+                <div className="mock-line" />
+                <div className="mock-line short" />
+              </div>
+            </div>
+          </section>
+
+          <section className="feature-row">
+            <div className="feature-text">
+              <div className="feature-eyebrow">STEP 3 · VOICEOVER</div>
+              <h2 className="feature-title">A natural voice narrates it</h2>
+              <p className="feature-desc">
+                Pick a voice and language, and Vidora generates studio-quality
+                narration synced to every scene.
+              </p>
+            </div>
+            <div className="feature-visual">
+              <div className="mock-card">
+                <div className="mock-icon">🎙️</div>
+                <div className="mock-wave">
+                  <span></span><span></span><span></span><span></span><span></span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="feature-row reverse">
+            <div className="feature-text">
+              <div className="feature-eyebrow">STEP 4 · RENDERING</div>
+              <h2 className="feature-title">Scenes come to life</h2>
+              <p className="feature-desc">
+                Animated visuals, captions, and transitions are rendered
+                automatically to match your script, scene by scene.
+              </p>
+            </div>
+            <div className="feature-visual">
+              <div className="mock-card">
+                <div className="mock-icon">🎬</div>
+                <div className="mock-progress"><div className="mock-progress-fill" /></div>
+              </div>
+            </div>
+          </section>
+
+          <section className="feature-row">
+            <div className="feature-text">
+              <div className="feature-eyebrow">STEP 5 · FINALIZING</div>
+              <h2 className="feature-title">Everything gets polished</h2>
+              <p className="feature-desc">
+                Audio, visuals, and captions are synced and finalized into
+                one smooth, ready-to-watch video.
+              </p>
+            </div>
+            <div className="feature-visual">
+              <div className="mock-card">
+                <div className="mock-icon">✅</div>
+                <div className="mock-line" />
+                <div className="mock-line short" />
+              </div>
+            </div>
+          </section>
+
+          <section className="feature-row reverse">
+            <div className="feature-text">
+              <div className="feature-eyebrow">STEP 6 · DOWNLOAD</div>
+              <h2 className="feature-title">Download and use it anywhere</h2>
+              <p className="feature-desc">
+                Get your finished MP4 in seconds — ready to upload to
+                YouTube, share with students, or post anywhere.
+              </p>
+            </div>
+            <div className="feature-visual">
+              <div className="mock-card">
+                <div className="mock-icon">⬇️</div>
+                <div className="mock-pill">vidora-video.mp4</div>
+              </div>
+            </div>
+          </section>
+
+          <section className="feature-row">
+            <div className="feature-text">
+              <div className="feature-eyebrow">TRANSLATE</div>
+              <h2 className="feature-title">Narrate in any language, any voice</h2>
+              <p className="feature-desc">
+                Generate the same video in multiple languages, with a voice
+                that fits — male, female, or child-style narration.
+              </p>
+              <div className="voice-chips">
+                <span className="voice-chip">Male</span>
+                <span className="voice-chip">Female</span>
+                <span className="voice-chip">Child</span>
+                <span className="voice-chip">Hindi</span>
+                <span className="voice-chip">English</span>
+                <span className="voice-chip">+more</span>
+              </div>
+            </div>
+            <div className="feature-visual">
+              <div className="mock-card">
+                <div className="mock-icon">🌐</div>
+                <div className="mock-tag-row">
+                  <span className="mock-tag">Hindi</span>
+                  <span className="mock-tag">Tamil</span>
+                  <span className="mock-tag">French</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="feature-row reverse">
+            <div className="feature-text">
+              <div className="feature-eyebrow">MEASURE</div>
+              <h2 className="feature-title">See how your videos perform</h2>
+              <p className="feature-desc">
+                Track how many videos you've generated and keep an eye on
+                your plan usage, right from your dashboard.
+              </p>
+            </div>
+            <div className="feature-visual">
+              <div className="mock-card">
+                <div className="mock-icon">📊</div>
+                <div className="mock-bars">
+                  <span style={{ height: "40%" }} />
+                  <span style={{ height: "70%" }} />
+                  <span style={{ height: "50%" }} />
+                  <span style={{ height: "90%" }} />
+                  <span style={{ height: "60%" }} />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="generator-cta-section" ref={generatorSectionRef}>
+            <div className="hero-badge" style={{ margin: "0 auto 20px" }}>Powered by AI</div>
+            <h2 className="feature-title" style={{ textAlign: "center", fontSize: 32 }}>
+              Try our free AI video generator
+            </h2>
+            <p className="feature-desc" style={{ textAlign: "center", maxWidth: 500, margin: "0 auto 36px" }}>
+              See Vidora turn a topic into a narrated video — right here, right now.
+            </p>
+
+            {!showGenerator ? (
+              <div className="demo-cta-row">
+                <button
+                  className="nav-btn"
+                  style={{ padding: "16px 36px", fontSize: 16 }}
+                  onClick={() => setShowGenerator(true)}
+                >
+                  Create Free Video →
+                </button>
+                <div className="demo-video-box">
+                  <div className="demo-video-play">▶</div>
+                  <div className="demo-video-label">Watch a 30s demo</div>
+                </div>
+              </div>
+            ) : (
+              renderGeneratorWorkspace()
+            )}
+          </section>
+        </>
+      )}
 
       <footer className="footer">2026 Vidora - Learn Visually</footer>
     </div>
