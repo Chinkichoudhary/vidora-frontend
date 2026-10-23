@@ -1351,7 +1351,7 @@ function App() {
               </p>
             </div>
             <div className="feature-visual">
-              <img src="/step2-reading.jpg" alt="Reading your content" className="feature-img" />
+              <img src="/step2-script.jpg" alt="AI writing your script" className="feature-img" />
             </div>
           </section>
 
@@ -1365,7 +1365,7 @@ function App() {
               </p>
             </div>
             <div className="feature-visual">
-              <img src="/step3-reading.jpg" alt="Reading your content" className="feature-img" />
+              <img src="/step3-voiceover.jpg" alt="Generating voiceover" className="feature-img" />
             </div>
           </section>
 
@@ -1379,7 +1379,7 @@ function App() {
               </p>
             </div>
             <div className="feature-visual">
-              <img src="/step4-reading.jpg" alt="Reading your content" className="feature-img" />
+              <img src="/step4-rendering.jpg" alt="Rendering video" className="feature-img" />
             </div>
           </section>
 
@@ -1393,7 +1393,7 @@ function App() {
               </p>
             </div>
             <div className="feature-visual">
-              <img src="/step5-reading.jpg" alt="Reading your content" className="feature-img" />
+              <img src="/step5-finalizing.jpg" alt="Finalizing video" className="feature-img" />
             </div>
           </section>
 
@@ -1407,7 +1407,7 @@ function App() {
               </p>
             </div>
             <div className="feature-visual">
-              <img src="/step6-reading.jpg" alt="Reading your content" className="feature-img" />
+              <img src="/step6-download.jpg" alt="Download your video" className="feature-img" />
             </div>
           </section>
 
@@ -1429,7 +1429,7 @@ function App() {
               </div>
             </div>
             <div className="feature-visual">
-              <img src="/step7-reading.jpg" alt="Reading your content" className="feature-img" />
+              <img src="/step7-translate.jpg" alt="Translate to any language" className="feature-img" />
             </div>
           </section>
 
@@ -1443,7 +1443,7 @@ function App() {
               </p>
             </div>
             <div className="feature-visual">
-              <img src="/step8-reading.jpg" alt="Reading your content" className="feature-img" />
+              <img src="/step8-measure.jpg" alt="Measure video performance" className="feature-img" />
             </div>
           </section>
 
