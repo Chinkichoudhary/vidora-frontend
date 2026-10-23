@@ -1336,7 +1336,7 @@ function App() {
               </p>
             </div>
             <div className="feature-visual">
-                <img src="/images/step1-reading.jpg" alt="Reading your content" className="feature-img" />
+                <img src="/step1-reading.jpg" alt="Reading your content" className="feature-img" />
             </div>
           </section>
 
@@ -1351,7 +1351,7 @@ function App() {
               </p>
             </div>
             <div className="feature-visual">
-              <img src="/images/step2-reading.jpg" alt="Reading your content" className="feature-img" />
+              <img src="/step2-reading.jpg" alt="Reading your content" className="feature-img" />
             </div>
           </section>
 
@@ -1365,7 +1365,7 @@ function App() {
               </p>
             </div>
             <div className="feature-visual">
-              <img src="/images/step3-reading.jpg" alt="Reading your content" className="feature-img" />
+              <img src="/step3-reading.jpg" alt="Reading your content" className="feature-img" />
             </div>
           </section>
 
@@ -1379,7 +1379,7 @@ function App() {
               </p>
             </div>
             <div className="feature-visual">
-              <img src="/images/step4-reading.jpg" alt="Reading your content" className="feature-img" />
+              <img src="/step4-reading.jpg" alt="Reading your content" className="feature-img" />
             </div>
           </section>
 
@@ -1393,7 +1393,7 @@ function App() {
               </p>
             </div>
             <div className="feature-visual">
-              <img src="/images/step5-reading.jpg" alt="Reading your content" className="feature-img" />
+              <img src="/step5-reading.jpg" alt="Reading your content" className="feature-img" />
             </div>
           </section>
 
@@ -1407,7 +1407,7 @@ function App() {
               </p>
             </div>
             <div className="feature-visual">
-              <img src="/images/step6-reading.jpg" alt="Reading your content" className="feature-img" />
+              <img src="/step6-reading.jpg" alt="Reading your content" className="feature-img" />
             </div>
           </section>
 
@@ -1429,7 +1429,7 @@ function App() {
               </div>
             </div>
             <div className="feature-visual">
-              <img src="/images/step7-reading.jpg" alt="Reading your content" className="feature-img" />
+              <img src="/step7-reading.jpg" alt="Reading your content" className="feature-img" />
             </div>
           </section>
 
@@ -1443,7 +1443,7 @@ function App() {
               </p>
             </div>
             <div className="feature-visual">
-              <img src="/images/step8-reading.jpg" alt="Reading your content" className="feature-img" />
+              <img src="/step8-reading.jpg" alt="Reading your content" className="feature-img" />
             </div>
           </section>
 
