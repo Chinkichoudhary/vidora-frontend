@@ -1429,7 +1429,7 @@ function App() {
               </div>
             </div>
             <div className="feature-visual">
-              <img src="/step7-translate.jpg" alt="Translate to any language" className="feature-img" />
+              <img src="/public/step7-translate.jpg" alt="Translate to any language" className="feature-img" />
             </div>
           </section>
 
