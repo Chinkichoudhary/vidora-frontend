@@ -50,7 +50,6 @@ const INITIAL_STEPS: ProgressStep[] = [
   { id: "finalizing", label: "Finalizing your video", status: "waiting" },
 ];
 
-
 const API = "https://vidora-backend-app-production-2235.up.railway.app";
 const GOOGLE_CLIENT_ID = "491948311246-6s8lefohbnslsaphobsdva4ljde7u4j6.apps.googleusercontent.com";
 
@@ -123,11 +122,9 @@ function App() {
 
   const [myVideos, setMyVideos] = useState<VideoRecord[]>([]);
   const [videosLoading, setVideosLoading] = useState(false);
-  
 
   const [playDemo, setPlayDemo] = useState(false);
   const [authNotice, setAuthNotice] = useState<string | null>(null);
-
 
   const [billingStatus, setBillingStatus] = useState<BillingStatus | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<string>("english");
@@ -135,8 +132,8 @@ function App() {
   const [selectedDuration, setSelectedDuration] = useState<number>(3);
   const [subscribeLoading, setSubscribeLoading] = useState<string | null>(null);
   const [subscribeError, setSubscribeError] = useState<string | null>(null);
-  const [showGenerator, setShowGenerator] = useState(false);
   const generatorSectionRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const script = document.createElement("script");
     script.src = "https://checkout.razorpay.com/v1/checkout.js";
@@ -148,29 +145,29 @@ function App() {
   }, []);
 
   useEffect(() => {
-  const savedToken = localStorage.getItem("vidora_token");
-  const savedUser = localStorage.getItem("vidora_user");
+    const savedToken = localStorage.getItem("vidora_token");
+    const savedUser = localStorage.getItem("vidora_user");
 
-  if (savedToken && savedUser) {
-    setToken(savedToken);
-    setUser(JSON.parse(savedUser));
+    if (savedToken && savedUser) {
+      setToken(savedToken);
+      setUser(JSON.parse(savedUser));
 
-    (async () => {
-      try {
-        const res = await fetch(API + "/billing/status", {
-          headers: {
-            Authorization: "Bearer " + savedToken,
-          },
-        });
+      (async () => {
+        try {
+          const res = await fetch(API + "/billing/status", {
+            headers: {
+              Authorization: "Bearer " + savedToken,
+            },
+          });
 
-        if (!res.ok) return;
+          if (!res.ok) return;
 
-        const data: BillingStatus = await res.json();
-        setBillingStatus(data);
-      } catch {}
-    })();
-  }
-}, []);
+          const data: BillingStatus = await res.json();
+          setBillingStatus(data);
+        } catch {}
+      })();
+    }
+  }, []);
 
   const saveAuth = (tok: string, usr: User) => {
     setToken(tok);
@@ -188,15 +185,11 @@ function App() {
     localStorage.removeItem("vidora_user");
     setScreen("home");
   };
-  
-
 
   const requireLogin = () => {
     setAuthNotice("Please sign up or log in to generate your video.");
     setScreen("signup");
   };
-
-
 
   const loadMyVideos = async (tok?: string) => {
     const useToken = tok || token;
@@ -216,47 +209,47 @@ function App() {
   };
 
   const loadBillingStatus = useCallback(async (tok?: string) => {
-  const useToken = tok || token;
-  if (!useToken) return;
+    const useToken = tok || token;
+    if (!useToken) return;
 
-  try {
-    const res = await fetch(API + "/billing/status", {
-      headers: { Authorization: "Bearer " + useToken },
-    });
-
-    if (!res.ok) {
-      setBillingStatus(null);
-      return;
-    }
-
-    const data: BillingStatus = await res.json();
-    setBillingStatus(data);
-
-    if (data.languages && data.languages.length > 0) {
-      setSelectedLanguage((prevLang) => {
-        const lang = data.languages.includes(prevLang)
-          ? prevLang
-          : data.languages[0];
-
-        const voices = data.voices_by_language?.[lang] || [];
-
-        setSelectedVoice((prevVoice) =>
-          voices.includes(prevVoice) ? prevVoice : voices[0] || ""
-        );
-
-        return lang;
+    try {
+      const res = await fetch(API + "/billing/status", {
+        headers: { Authorization: "Bearer " + useToken },
       });
-    }
 
-    if (data.durations && data.durations.length > 0) {
-      setSelectedDuration((prev) =>
-        data.durations.includes(prev) ? prev : data.durations[0]
-      );
+      if (!res.ok) {
+        setBillingStatus(null);
+        return;
+      }
+
+      const data: BillingStatus = await res.json();
+      setBillingStatus(data);
+
+      if (data.languages && data.languages.length > 0) {
+        setSelectedLanguage((prevLang) => {
+          const lang = data.languages.includes(prevLang)
+            ? prevLang
+            : data.languages[0];
+
+          const voices = data.voices_by_language?.[lang] || [];
+
+          setSelectedVoice((prevVoice) =>
+            voices.includes(prevVoice) ? prevVoice : voices[0] || ""
+          );
+
+          return lang;
+        });
+      }
+
+      if (data.durations && data.durations.length > 0) {
+        setSelectedDuration((prev) =>
+          data.durations.includes(prev) ? prev : data.durations[0]
+        );
+      }
+    } catch {
+      setBillingStatus(null);
     }
-  } catch {
-    setBillingStatus(null);
-  }
-}, [token]);
+  }, [token]);
 
   const handleLanguageChange = (lang: string) => {
     setSelectedLanguage(lang);
@@ -416,9 +409,9 @@ function App() {
   };
 
   const isReady =
-  activeTab === "text"
-    ? (console.log("Text length:", textInput.length), textInput.trim().length > 20)
-    : (console.log("Selected file:", selectedFile), selectedFile !== null);
+    activeTab === "text"
+      ? (console.log("Text length:", textInput.length), textInput.trim().length > 20)
+      : (console.log("Selected file:", selectedFile), selectedFile !== null);
   const delay = (ms: number) =>
     new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -625,7 +618,8 @@ function App() {
       />
     );
   };
-    const renderGeneratorWorkspace = () => (
+
+  const renderGeneratorWorkspace = () => (
     <div className="hero-workspace" style={{ marginTop: 0 }}>
       <div className="main-card" style={{ marginTop: 0 }}>
         <div className="tabs">
@@ -790,6 +784,7 @@ function App() {
       </div>
     </div>
   );
+
   const Navbar = () => {
     const isPureHome = screen === "home" && !videoUrl && !isGenerating;
 
@@ -939,6 +934,7 @@ function App() {
             <h2 className="auth-title">Welcome Back</h2>
             <p className="auth-subtitle">Login to your Vidora account</p>
             {authNotice && <div className="auth-notice">{authNotice}</div>}
+
             <GoogleButton buttonText="login" />
 
             <div className="auth-divider">
@@ -1005,6 +1001,7 @@ function App() {
               Start generating educational videos for free
             </p>
             {authNotice && <div className="auth-notice">{authNotice}</div>}
+
             <GoogleButton buttonText="signup" />
 
             <div className="auth-divider">
@@ -1310,7 +1307,7 @@ function App() {
     );
   }
 
-    return (
+  return (
     <div className="app">
       <Navbar />
       <section className="hero">
@@ -1353,7 +1350,7 @@ function App() {
               </p>
             </div>
             <div className="feature-visual">
-                <img src="/step1-reading.jpg" alt="Reading your content" className="feature-img" />
+              <img src="/step1-reading.jpg" alt="Reading your content" className="feature-img" />
             </div>
           </section>
 
@@ -1473,17 +1470,16 @@ function App() {
               See Vidora turn a topic into a narrated video — right here, right now.
             </p>
 
-            {!showGenerator ? (
-              <div className="demo-cta-row">
-                <button
-                  className="nav-btn"
-                  style={{ padding: "16px 36px", fontSize: 16 }}
-                  onClick={requireLogin}
-                >
-                  Create Free Video →
-                </button>
-                <div className="demo-video-box" onClick={() => setPlayDemo(true)}>
-                 {playDemo ? (
+            <div className="demo-cta-row">
+              <button
+                className="nav-btn"
+                style={{ padding: "16px 36px", fontSize: 16 }}
+                onClick={requireLogin}
+              >
+                Create Free Video →
+              </button>
+              <div className="demo-video-box" onClick={() => setPlayDemo(true)}>
+                {playDemo ? (
                   <video
                     className="demo-video-player"
                     src="/demo-video.mp4"
@@ -1496,12 +1492,9 @@ function App() {
                     <div className="demo-video-play">▶</div>
                     <div className="demo-video-label">Watch a 30s demo</div>
                   </>
-             )}
-         </div>
+                )}
               </div>
-            ) : (
-              renderGeneratorWorkspace()
-            )}
+            </div>
           </section>
         </>
       )}
