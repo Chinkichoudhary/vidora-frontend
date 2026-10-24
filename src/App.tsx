@@ -50,8 +50,6 @@ const INITIAL_STEPS: ProgressStep[] = [
   { id: "finalizing", label: "Finalizing your video", status: "waiting" },
 ];
 
-
-
 type Article = {
   id: number;
   title: string;
@@ -99,8 +97,6 @@ const ARTICLES: Article[] = [
     ],
   },
 ];
-
-
 
 const API = "https://vidora-backend-app-production-2235.up.railway.app";
 const GOOGLE_CLIENT_ID = "491948311246-6s8lefohbnslsaphobsdva4ljde7u4j6.apps.googleusercontent.com";
@@ -242,11 +238,20 @@ function App() {
     setAuthNotice("Please sign up or log in to generate your video.");
     setScreen("signup");
   };
-  const openArticle = (article: Article) => {
-  setSelectedArticle(article);
-  setScreen("article");
-  window.scrollTo(0, 0);
+
+  const scrollToSection = (id: string) => {
+    setScreen("home");
+    setTimeout(() => {
+      document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 50);
   };
+
+  const openArticle = (article: Article) => {
+    setSelectedArticle(article);
+    setScreen("article");
+    window.scrollTo(0, 0);
+  };
+
   const loadMyVideos = async (tok?: string) => {
     const useToken = tok || token;
     if (!useToken) return;
@@ -856,16 +861,10 @@ function App() {
         </div>
 
         <div className="nav-center">
-          <span className="nav-link">Features</span>
-          <span
-            className="nav-link"
-            onClick={() => setScreen("pricing")}
-            style={{ cursor: "pointer" }}
-          >
-            Pricing
-          </span>
-          <span className="nav-link">How It Works</span>
-          <span className="nav-link">FAQ</span>
+          <span className="nav-link" onClick={() => scrollToSection("features")}>Features</span>
+          <span className="nav-link" onClick={() => setScreen("pricing")}>Pricing</span>
+          <span className="nav-link" onClick={() => scrollToSection("how-it-works")}>How It Works</span>
+          <span className="nav-link" onClick={() => scrollToSection("articles")}>Articles</span>
         </div>
 
         <div className="nav-right">
@@ -918,7 +917,6 @@ function App() {
       </nav>
     );
   };
-  
 
   if (screen === "article" && selectedArticle) {
     return (
@@ -948,7 +946,7 @@ function App() {
         </article>
         <footer className="footer">2026 Vidora - Learn Visually</footer>
       </div>
-   );
+    );
   }
 
   if (screen === "pricing") {
@@ -1427,7 +1425,7 @@ function App() {
 
       {!user && (
         <>
-          <section className="feature-row">
+          <section className="feature-row" id="how-it-works">
             <div className="feature-text">
               <div className="feature-eyebrow">STEP 1 · INTAKE</div>
               <h2 className="feature-title">We start by reading your content</h2>
@@ -1513,7 +1511,7 @@ function App() {
             </div>
           </section>
 
-          <section className="feature-row">
+          <section className="feature-row" id="features">
             <div className="feature-text">
               <div className="feature-eyebrow">TRANSLATE</div>
               <h2 className="feature-title">Narrate in any language, any voice</h2>
@@ -1586,7 +1584,8 @@ function App() {
           </section>
         </>
       )}
-            <section className="articles-section">
+
+      <section className="articles-section" id="articles">
         <h2 className="feature-title" style={{ textAlign: "center" }}>
           Learn & Get Inspired
         </h2>
@@ -1611,6 +1610,7 @@ function App() {
           ))}
         </div>
       </section>
+
       <footer className="footer">2026 Vidora - Learn Visually</footer>
     </div>
   );

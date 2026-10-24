@@ -1438,6 +1438,7 @@ body {
     margin-right: auto;
   }
 }
+
 .feature-img {
   width: 100%;
   max-width: 460px;
@@ -1447,10 +1448,21 @@ body {
   border: 1px solid rgba(236, 72, 153, 0.25);
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
 }
-@media (max-width: 1024px) {
-  .nav-center {
-    display: none;
-  }
+
+/* ── NAVBAR RESPONSIVE (links stay visible until the window is small) ── */
+@media (max-width: 1200px) {
+  .nav-center { gap: 18px; }
+  .nav-link { font-size: 13px; }
+}
+
+@media (max-width: 800px) {
+  .nav-center { display: none; }
+}
+
+/* Keep section titles clear of the sticky navbar when jumping to them */
+.feature-row,
+.articles-section {
+  scroll-margin-top: 90px;
 }
 
 .demo-video-player {
@@ -1471,7 +1483,7 @@ body {
   margin-bottom: 20px;
 }
 
-
+/* ── ARTICLES ── */
 .articles-section {
   max-width: 1200px;
   margin: 100px auto 60px;
