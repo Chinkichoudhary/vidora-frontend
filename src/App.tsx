@@ -7,7 +7,7 @@ import React, {
 import "./App.css";
 
 type Tab = "text" | "pdf";
-type Screen = "home" | "login" | "signup" | "dashboard" | "pricing";
+type Screen = "home" | "login" | "signup" | "dashboard" | "pricing" | "article";
 
 type ProgressStep = {
   id: string;
@@ -49,6 +49,58 @@ const INITIAL_STEPS: ProgressStep[] = [
   { id: "rendering", label: "Rendering video", status: "waiting" },
   { id: "finalizing", label: "Finalizing your video", status: "waiting" },
 ];
+
+
+
+type Article = {
+  id: number;
+  title: string;
+  summary: string;
+  image: string;
+  readTime: string;
+  content: string[];
+};
+
+const ARTICLES: Article[] = [
+  {
+    id: 1,
+    title: "How to Start a Faceless YouTube Channel",
+    summary: "You don't need a camera or your own voice. Here is how creators build channels with AI narration and animation.",
+    image: "/articles/article1.jpg",
+    readTime: "4 min read",
+    content: [
+      "Faceless channels let you share knowledge without appearing on camera. They are popular for education, explainers and storytelling.",
+      "Start by choosing a narrow topic you can make many videos about. Consistency matters more than perfection.",
+      "Use a tool like Vidora to turn your notes into a narrated, animated video, then upload and repeat on a schedule.",
+    ],
+  },
+  {
+    id: 2,
+    title: "5 Tips for Better Educational Videos",
+    summary: "Short scenes, clear narration and simple visuals help viewers remember what they learn.",
+    image: "/articles/article2.jpg",
+    readTime: "3 min read",
+    content: [
+      "Keep each scene focused on one idea. Viewers lose attention when too much appears on screen at once.",
+      "Write narration the way you would explain the topic to a friend, in short and clear sentences.",
+      "End with a quick summary so the key points stick.",
+    ],
+  },
+  {
+    id: 3,
+    title: "Narrating Videos in Hindi and Other Languages",
+    summary: "Reach a wider audience by publishing the same lesson in more than one language.",
+    image: "/articles/article3.jpg",
+    readTime: "3 min read",
+    content: [
+      "The same topic can reach far more people when narrated in their own language.",
+      "Pick a voice that matches the tone of your content. A calm voice suits lessons, an energetic one suits quick tips.",
+      "Publish each language as a separate video so viewers can find it in search.",
+    ],
+  },
+];
+
+
 
 const API = "https://vidora-backend-app-production-2235.up.railway.app";
 const GOOGLE_CLIENT_ID = "491948311246-6s8lefohbnslsaphobsdva4ljde7u4j6.apps.googleusercontent.com";
@@ -125,7 +177,7 @@ function App() {
 
   const [playDemo, setPlayDemo] = useState(false);
   const [authNotice, setAuthNotice] = useState<string | null>(null);
-
+  const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [billingStatus, setBillingStatus] = useState<BillingStatus | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<string>("english");
   const [selectedVoice, setSelectedVoice] = useState<string>("");
@@ -190,7 +242,11 @@ function App() {
     setAuthNotice("Please sign up or log in to generate your video.");
     setScreen("signup");
   };
-
+  const openArticle = (article: Article) => {
+  setSelectedArticle(article);
+  setScreen("article");
+  window.scrollTo(0, 0);
+  };
   const loadMyVideos = async (tok?: string) => {
     const useToken = tok || token;
     if (!useToken) return;
@@ -862,6 +918,38 @@ function App() {
       </nav>
     );
   };
+  
+
+  if (screen === "article" && selectedArticle) {
+    return (
+      <div className="app">
+        <Navbar />
+        <article className="article-page">
+          <button className="nav-btn outline" onClick={() => setScreen("home")}>
+            ← Back
+          </button>
+          <img
+            src={selectedArticle.image}
+            alt={selectedArticle.title}
+            className="article-hero-img"
+          />
+          <div className="article-meta">{selectedArticle.readTime}</div>
+          <h1 className="article-title">{selectedArticle.title}</h1>
+          {selectedArticle.content.map((para, i) => (
+            <p key={i} className="article-text">{para}</p>
+          ))}
+          <button
+            className="nav-btn"
+            style={{ marginTop: 24, padding: "14px 32px", fontSize: 16 }}
+            onClick={() => (user ? setScreen("home") : requireLogin())}
+          >
+            Create your own video →
+          </button>
+        </article>
+        <footer className="footer">2026 Vidora - Learn Visually</footer>
+      </div>
+   );
+  }
 
   if (screen === "pricing") {
     return (
@@ -1498,7 +1586,31 @@ function App() {
           </section>
         </>
       )}
-
+            <section className="articles-section">
+        <h2 className="feature-title" style={{ textAlign: "center" }}>
+          Learn & Get Inspired
+        </h2>
+        <p className="feature-desc" style={{ textAlign: "center", margin: "0 auto 40px" }}>
+          Guides and tips for creating better videos.
+        </p>
+        <div className="articles-grid">
+          {ARTICLES.map((article) => (
+            <div
+              key={article.id}
+              className="article-card"
+              onClick={() => openArticle(article)}
+            >
+              <img src={article.image} alt={article.title} className="article-card-img" />
+              <div className="article-card-body">
+                <div className="article-meta">{article.readTime}</div>
+                <h3 className="article-card-title">{article.title}</h3>
+                <p className="article-card-summary">{article.summary}</p>
+                <span className="auth-link">Read more →</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
       <footer className="footer">2026 Vidora - Learn Visually</footer>
     </div>
   );
