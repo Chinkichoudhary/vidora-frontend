@@ -1459,3 +1459,14 @@ body {
   border-radius: 20px;
   object-fit: cover;
 }
+
+.auth-notice {
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  color: #a5b4fc;
+  font-size: 13px;
+  font-family: sans-serif;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}

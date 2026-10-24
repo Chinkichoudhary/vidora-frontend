@@ -126,7 +126,7 @@ function App() {
   
 
   const [playDemo, setPlayDemo] = useState(false);
-
+  const [authNotice, setAuthNotice] = useState<string | null>(null);
 
 
   const [billingStatus, setBillingStatus] = useState<BillingStatus | null>(null);
@@ -175,6 +175,7 @@ function App() {
   const saveAuth = (tok: string, usr: User) => {
     setToken(tok);
     setUser(usr);
+    setAuthNotice(null);
     localStorage.setItem("vidora_token", tok);
     localStorage.setItem("vidora_user", JSON.stringify(usr));
   };
@@ -187,6 +188,15 @@ function App() {
     localStorage.removeItem("vidora_user");
     setScreen("home");
   };
+  
+
+
+  const requireLogin = () => {
+    setAuthNotice("Please sign up or log in to generate your video.");
+    setScreen("signup");
+  };
+
+
 
   const loadMyVideos = async (tok?: string) => {
     const useToken = tok || token;
@@ -445,6 +455,10 @@ function App() {
 
   const handleGenerate = async () => {
     if (!isReady) return;
+    if (!token) {
+      requireLogin();
+      return;
+    }
     setIsGenerating(true);
     setError(null);
     setVideoUrl(null);
@@ -924,7 +938,7 @@ function App() {
           <div className="auth-card">
             <h2 className="auth-title">Welcome Back</h2>
             <p className="auth-subtitle">Login to your Vidora account</p>
-
+            {authNotice && <div className="auth-notice">{authNotice}</div>}
             <GoogleButton buttonText="login" />
 
             <div className="auth-divider">
@@ -990,7 +1004,7 @@ function App() {
             <p className="auth-subtitle">
               Start generating educational videos for free
             </p>
-
+            {authNotice && <div className="auth-notice">{authNotice}</div>}
             <GoogleButton buttonText="signup" />
 
             <div className="auth-divider">
@@ -1316,9 +1330,7 @@ function App() {
             <button
               className="nav-btn"
               style={{ padding: "14px 32px", fontSize: 16 }}
-              onClick={() =>
-                generatorSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
-              }
+              onClick={requireLogin}
             >
               Get Started Here →
             </button>
@@ -1466,7 +1478,7 @@ function App() {
                 <button
                   className="nav-btn"
                   style={{ padding: "16px 36px", fontSize: 16 }}
-                  onClick={() => setShowGenerator(true)}
+                  onClick={requireLogin}
                 >
                   Create Free Video →
                 </button>
