@@ -123,6 +123,11 @@ function App() {
 
   const [myVideos, setMyVideos] = useState<VideoRecord[]>([]);
   const [videosLoading, setVideosLoading] = useState(false);
+  
+
+  const [playDemo, setPlayDemo] = useState(false);
+
+
 
   const [billingStatus, setBillingStatus] = useState<BillingStatus | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<string>("english");
@@ -1465,10 +1470,22 @@ function App() {
                 >
                   Create Free Video →
                 </button>
-                <div className="demo-video-box">
-                  <div className="demo-video-play">▶</div>
-                  <div className="demo-video-label">Watch a 30s demo</div>
-                </div>
+                <div className="demo-video-box" onClick={() => setPlayDemo(true)}>
+                 {playDemo ? (
+                  <video
+                    className="demo-video-player"
+                    src="/demo-video.mp4"
+                    controls
+                    autoPlay
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                ) : (
+                  <>
+                    <div className="demo-video-play">▶</div>
+                    <div className="demo-video-label">Watch a 30s demo</div>
+                  </>
+             )}
+         </div>
               </div>
             ) : (
               renderGeneratorWorkspace()
