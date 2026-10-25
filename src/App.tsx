@@ -1611,7 +1611,84 @@ function App() {
         </div>
       </section>
 
-      <footer className="footer">2026 Vidora - Learn Visually</footer>
+            <footer className="site-footer">
+        <div className="site-footer-inner">
+          <div className="footer-brand">
+            <div className="logo">
+              <div className="logo-icon">V</div>
+              <span className="logo-text">Vidora</span>
+            </div>
+            <p className="footer-tagline">
+              Turn any topic, notes or PDF into a narrated, animated learning
+              video in minutes.
+            </p>
+            <button
+              className="nav-btn"
+              style={{ padding: "12px 24px", fontSize: 14 }}
+              onClick={() => (user ? setScreen("dashboard") : requireLogin())}
+            >
+              {user ? "Go to my videos →" : "Get Started Free →"}
+            </button>
+          </div>
+
+          <div className="footer-col">
+            <h4 className="footer-heading">Vidora Tools</h4>
+            <div className="footer-label">VIDEO TOOLS</div>
+            <span className="footer-link" onClick={() => (user ? setScreen("home") : requireLogin())}>Text to Video</span>
+            <span className="footer-link" onClick={() => (user ? setScreen("home") : requireLogin())}>PDF to Video</span>
+            <span className="footer-link" onClick={() => (user ? setScreen("home") : requireLogin())}>Educational Video Maker</span>
+            <span className="footer-link" onClick={() => (user ? setScreen("home") : requireLogin())}>Faceless YouTube Videos</span>
+            <div className="footer-label">PLANS</div>
+            <span className="footer-link" onClick={() => setScreen("pricing")}>Free</span>
+            <span className="footer-link" onClick={() => setScreen("pricing")}>Basic</span>
+            <span className="footer-link" onClick={() => setScreen("pricing")}>Premium</span>
+          </div>
+
+          <div className="footer-col">
+            <h4 className="footer-heading">Voice & Language</h4>
+            <div className="footer-label">LANGUAGES</div>
+            <span className="footer-link" onClick={() => setScreen("pricing")}>English</span>
+            <span className="footer-link" onClick={() => setScreen("pricing")}>Hindi</span>
+            <span className="footer-link" onClick={() => setScreen("pricing")}>Tamil</span>
+            <span className="footer-link" onClick={() => setScreen("pricing")}>Telugu</span>
+            <span className="footer-link" onClick={() => setScreen("pricing")}>Spanish, French, German</span>
+            <span className="footer-link" onClick={() => setScreen("pricing")}>Japanese</span>
+            <div className="footer-label">NARRATION</div>
+            <span className="footer-link" onClick={() => setScreen("pricing")}>Male & Female Voices</span>
+          </div>
+
+          <div className="footer-col">
+            <h4 className="footer-heading">Resources</h4>
+            <div className="footer-label">LEARN</div>
+            <span className="footer-link" onClick={() => scrollToSection("how-it-works")}>How It Works</span>
+            <span className="footer-link" onClick={() => scrollToSection("features")}>Features</span>
+            <span className="footer-link" onClick={() => scrollToSection("articles")}>All Articles</span>
+            {ARTICLES.map((article) => (
+              <span
+                key={article.id}
+                className="footer-link"
+                onClick={() => openArticle(article)}
+              >
+                {article.title}
+              </span>
+            ))}
+            <div className="footer-label">ACCOUNT</div>
+            {user ? (
+              <span className="footer-link" onClick={() => { setScreen("dashboard"); loadMyVideos(); }}>My Videos</span>
+            ) : (
+              <>
+                <span className="footer-link" onClick={() => setScreen("login")}>Login</span>
+                <span className="footer-link" onClick={() => setScreen("signup")}>Sign Up</span>
+              </>
+            )}
+          </div>
+        </div>
+
+        <div className="footer-bottom">
+          <span>© 2026 Vidora · Learn Visually</span>
+          <span>Made with AI for creators and students</span>
+        </div>
+      </footer>
     </div>
   );
 }
