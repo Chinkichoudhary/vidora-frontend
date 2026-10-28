@@ -99,7 +99,6 @@ const ARTICLES: Article[] = [
 ];
 
 const API = "https://vidora-backend-app-production-2235.up.railway.app";
-const GOOGLE_CLIENT_ID = "491948311246-6s8lefohbnslsaphobsdva4ljde7u4j6.apps.googleusercontent.com";
 
 const PLAN_DISPLAY: Record<string, { name: string; price: string; features: string[] }> = {
   free: {
@@ -139,6 +138,11 @@ const VOICE_LABELS: Record<string, string> = {
   "ja-JP-KeitaNeural": "Keita (Japanese)",
 };
 
+const makeCaptcha = () => ({
+  a: Math.floor(Math.random() * 9) + 1,
+  b: Math.floor(Math.random() * 9) + 1,
+});
+
 function App() {
   const [screen, setScreen] = useState<Screen>("home");
   const [user, setUser] = useState<User | null>(null);
@@ -157,6 +161,7 @@ function App() {
   const [videoSize, setVideoSize] = useState<string | null>(null);
   const [generatingDuration, setGeneratingDuration] = useState<number | null>(null);
 
+  const [loginName, setLoginName] = useState("");
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [loginError, setLoginError] = useState<string | null>(null);
@@ -165,6 +170,9 @@ function App() {
   const [signupName, setSignupName] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
+  const [signupConfirm, setSignupConfirm] = useState("");
+  const [captcha, setCaptcha] = useState(makeCaptcha);
+  const [captchaAnswer, setCaptchaAnswer] = useState("");
   const [signupError, setSignupError] = useState<string | null>(null);
   const [signupLoading, setSignupLoading] = useState(false);
 
@@ -252,6 +260,11 @@ function App() {
     window.scrollTo(0, 0);
   };
 
+  const refreshCaptcha = () => {
+    setCaptcha(makeCaptcha());
+    setCaptchaAnswer("");
+  };
+
   const loadMyVideos = async (tok?: string) => {
     const useToken = tok || token;
     if (!useToken) return;
@@ -329,7 +342,15 @@ function App() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || "Login failed");
+
+      const enteredName = loginName.trim().toLowerCase();
+      const accountName = String(data.user.name || "").trim().toLowerCase();
+      if (enteredName !== accountName) {
+        throw new Error("Name does not match this account");
+      }
+
       saveAuth(data.token, data.user);
+      setLoginName("");
       setLoginEmail("");
       setLoginPassword("");
       setScreen("dashboard");
@@ -343,14 +364,29 @@ function App() {
   };
 
   const handleSignup = async () => {
-    setSignupLoading(true);
     setSignupError(null);
+
+    if (signupPassword.length < 6) {
+      setSignupError("Password must be at least 6 characters");
+      return;
+    }
+    if (signupPassword !== signupConfirm) {
+      setSignupError("Passwords do not match");
+      return;
+    }
+    if (Number(captchaAnswer) !== captcha.a + captcha.b) {
+      setSignupError("Captcha answer is incorrect. Please try again.");
+      refreshCaptcha();
+      return;
+    }
+
+    setSignupLoading(true);
     try {
       const res = await fetch(API + "/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: signupName,
+          name: signupName.trim(),
           email: signupEmail,
           password: signupPassword,
         }),
@@ -361,32 +397,16 @@ function App() {
       setSignupName("");
       setSignupEmail("");
       setSignupPassword("");
+      setSignupConfirm("");
+      refreshCaptcha();
       setScreen("dashboard");
       loadMyVideos(data.token);
       loadBillingStatus(data.token);
     } catch (err: any) {
       setSignupError(err.message);
+      refreshCaptcha();
     } finally {
       setSignupLoading(false);
-    }
-  };
-
-  const handleGoogleLogin = async (credential: string) => {
-    try {
-      const res = await fetch(API + "/auth/google", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ credential }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || "Google login failed");
-      saveAuth(data.token, data.user);
-      setScreen("dashboard");
-      loadMyVideos(data.token);
-      loadBillingStatus(data.token);
-    } catch (err: any) {
-      setLoginError(err.message);
-      setSignupError(err.message);
     }
   };
 
@@ -642,42 +662,6 @@ function App() {
     setVideoSize(null);
     setVideoDuration(null);
     setGeneratingDuration(null);
-  };
-
-  const GoogleButton = ({ buttonText }: { buttonText: string }) => {
-    useEffect(() => {
-      const win = window as any;
-      const tryRender = () => {
-        if (win.google && win.google.accounts) {
-          win.google.accounts.id.initialize({
-            client_id: GOOGLE_CLIENT_ID,
-            callback: (response: any) => {
-              handleGoogleLogin(response.credential);
-            },
-          });
-          const el = document.getElementById("google-btn-" + buttonText);
-          if (el) {
-            win.google.accounts.id.renderButton(el, {
-              theme: "filled_black",
-              size: "large",
-              width: 340,
-              text: buttonText === "login" ? "signin_with" : "signup_with",
-              shape: "rectangular",
-            });
-          }
-        } else {
-          setTimeout(tryRender, 500);
-        }
-      };
-      tryRender();
-    }, [buttonText]);
-
-    return (
-      <div
-        id={"google-btn-" + buttonText}
-        style={{ marginBottom: 20, display: "flex", justifyContent: "center" }}
-      />
-    );
   };
 
   const renderGeneratorWorkspace = () => (
@@ -1021,10 +1005,15 @@ function App() {
             <p className="auth-subtitle">Login to your Vidora account</p>
             {authNotice && <div className="auth-notice">{authNotice}</div>}
 
-            <GoogleButton buttonText="login" />
-
-            <div className="auth-divider">
-              <span>or continue with email</span>
+            <div className="auth-field">
+              <label className="input-label">Name</label>
+              <input
+                className="auth-input"
+                type="text"
+                placeholder="Your full name"
+                value={loginName}
+                onChange={(e) => setLoginName(e.target.value)}
+              />
             </div>
 
             <div className="auth-field">
@@ -1055,7 +1044,7 @@ function App() {
             <button
               className="generate-btn"
               onClick={handleLogin}
-              disabled={loginLoading || !loginEmail || !loginPassword}
+              disabled={loginLoading || !loginName || !loginEmail || !loginPassword}
             >
               {loginLoading ? "Logging in..." : "Login"}
             </button>
@@ -1088,18 +1077,12 @@ function App() {
             </p>
             {authNotice && <div className="auth-notice">{authNotice}</div>}
 
-            <GoogleButton buttonText="signup" />
-
-            <div className="auth-divider">
-              <span>or sign up with email</span>
-            </div>
-
             <div className="auth-field">
               <label className="input-label">Full Name</label>
               <input
                 className="auth-input"
                 type="text"
-                placeholder="Your name"
+                placeholder="Your full name"
                 value={signupName}
                 onChange={(e) => setSignupName(e.target.value)}
               />
@@ -1117,15 +1100,50 @@ function App() {
             </div>
 
             <div className="auth-field">
-              <label className="input-label">Password</label>
+              <label className="input-label">New Password</label>
               <input
                 className="auth-input"
                 type="password"
                 placeholder="At least 6 characters"
                 value={signupPassword}
                 onChange={(e) => setSignupPassword(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSignup()}
               />
+            </div>
+
+            <div className="auth-field">
+              <label className="input-label">Confirm Password</label>
+              <input
+                className="auth-input"
+                type="password"
+                placeholder="Re-enter your password"
+                value={signupConfirm}
+                onChange={(e) => setSignupConfirm(e.target.value)}
+              />
+            </div>
+
+            <div className="auth-field">
+              <label className="input-label">Captcha</label>
+              <div className="captcha-row">
+                <div className="captcha-box">
+                  {captcha.a} + {captcha.b} = ?
+                </div>
+                <input
+                  className="auth-input"
+                  type="number"
+                  placeholder="Answer"
+                  value={captchaAnswer}
+                  onChange={(e) => setCaptchaAnswer(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSignup()}
+                />
+                <button
+                  type="button"
+                  className="captcha-refresh"
+                  onClick={refreshCaptcha}
+                  title="New captcha"
+                >
+                  ↻
+                </button>
+              </div>
             </div>
 
             {signupError && <div className="auth-error">{signupError}</div>}
@@ -1134,7 +1152,12 @@ function App() {
               className="generate-btn"
               onClick={handleSignup}
               disabled={
-                signupLoading || !signupName || !signupEmail || !signupPassword
+                signupLoading ||
+                !signupName ||
+                !signupEmail ||
+                !signupPassword ||
+                !signupConfirm ||
+                !captchaAnswer
               }
             >
               {signupLoading ? "Creating account..." : "Create Account"}
@@ -1611,7 +1634,7 @@ function App() {
         </div>
       </section>
 
-            <footer className="site-footer">
+      <footer className="site-footer">
         <div className="site-footer-inner">
           <div className="footer-brand">
             <div className="logo">
