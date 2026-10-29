@@ -138,10 +138,7 @@ const VOICE_LABELS: Record<string, string> = {
   "ja-JP-KeitaNeural": "Keita (Japanese)",
 };
 
-const makeCaptcha = () => ({
-  a: Math.floor(Math.random() * 9) + 1,
-  b: Math.floor(Math.random() * 9) + 1,
-});
+const TURNSTILE_SITE_KEY = "0x4AAAAAAFqn-0hCsLicsHVx";
 
 function App() {
   const [screen, setScreen] = useState<Screen>("home");
@@ -171,8 +168,13 @@ function App() {
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
   const [signupConfirm, setSignupConfirm] = useState("");
-  const [captcha, setCaptcha] = useState(makeCaptcha);
-  const [captchaAnswer, setCaptchaAnswer] = useState("");
+  const [signupStep, setSignupStep] = useState<"form" | "otp">("form");
+  const [signupOtp, setSignupOtp] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [signupInfo, setSignupInfo] = useState<string | null>(null);
+  const turnstileBoxRef = useRef<HTMLDivElement>(null);
+  const turnstileWidgetId = useRef<string | null>(null);
   const [signupError, setSignupError] = useState<string | null>(null);
   const [signupLoading, setSignupLoading] = useState(false);
 
@@ -225,6 +227,50 @@ function App() {
     }
   }, []);
 
+  // Resend countdown
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const t = setTimeout(() => setResendCooldown((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resendCooldown]);
+
+  // Render the Turnstile widget while the signup form is visible
+  useEffect(() => {
+    if (screen !== "signup" || signupStep !== "form") return;
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined = undefined;
+
+    const tryRender = () => {
+      if (cancelled) return;
+      const w = window as any;
+      if (w.turnstile && turnstileBoxRef.current) {
+        turnstileWidgetId.current = w.turnstile.render(turnstileBoxRef.current, {
+          sitekey: TURNSTILE_SITE_KEY,
+          theme: "dark",
+          callback: (t: string) => setTurnstileToken(t),
+          "expired-callback": () => setTurnstileToken(""),
+          "error-callback": () => setTurnstileToken(""),
+        });
+      } else {
+        timer = setTimeout(tryRender, 300);
+      }
+    };
+    tryRender();
+
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+      const w = window as any;
+      if (turnstileWidgetId.current && w.turnstile) {
+        try {
+          w.turnstile.remove(turnstileWidgetId.current);
+        } catch {}
+      }
+      turnstileWidgetId.current = null;
+      setTurnstileToken("");
+    };
+  }, [screen, signupStep]);
+
   const saveAuth = (tok: string, usr: User) => {
     setToken(tok);
     setUser(usr);
@@ -260,9 +306,14 @@ function App() {
     window.scrollTo(0, 0);
   };
 
-  const refreshCaptcha = () => {
-    setCaptcha(makeCaptcha());
-    setCaptchaAnswer("");
+  const resetTurnstile = () => {
+    const w = window as any;
+    if (w.turnstile && turnstileWidgetId.current) {
+      try {
+        w.turnstile.reset(turnstileWidgetId.current);
+      } catch {}
+    }
+    setTurnstileToken("");
   };
 
   const loadMyVideos = async (tok?: string) => {
@@ -363,8 +414,9 @@ function App() {
     }
   };
 
-  const handleSignup = async () => {
+  const handleSendOtp = async () => {
     setSignupError(null);
+    setSignupInfo(null);
 
     if (signupPassword.length < 6) {
       setSignupError("Password must be at least 6 characters");
@@ -374,40 +426,95 @@ function App() {
       setSignupError("Passwords do not match");
       return;
     }
-    if (Number(captchaAnswer) !== captcha.a + captcha.b) {
-      setSignupError("Captcha answer is incorrect. Please try again.");
-      refreshCaptcha();
+    if (!turnstileToken) {
+      setSignupError("Please complete the verification check.");
       return;
     }
 
     setSignupLoading(true);
     try {
-      const res = await fetch(API + "/auth/signup", {
+      const res = await fetch(API + "/auth/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: signupName.trim(),
-          email: signupEmail,
+          email: signupEmail.trim(),
           password: signupPassword,
+          turnstile_token: turnstileToken,
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || "Signup failed");
+      if (!res.ok) throw new Error(data.detail || "Could not send the code");
+
+      setSignupOtp("");
+      setResendCooldown(60);
+      setSignupStep("otp");
+    } catch (err: any) {
+      setSignupError(err.message);
+      resetTurnstile();
+    } finally {
+      setSignupLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    setSignupError(null);
+    setSignupInfo(null);
+    setSignupLoading(true);
+    try {
+      const res = await fetch(API + "/auth/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: signupName.trim(),
+          email: signupEmail.trim(),
+          password: signupPassword,
+          otp: signupOtp.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Verification failed");
+
       saveAuth(data.token, data.user);
       setSignupName("");
       setSignupEmail("");
       setSignupPassword("");
       setSignupConfirm("");
-      refreshCaptcha();
+      setSignupOtp("");
+      setSignupStep("form");
       setScreen("dashboard");
       loadMyVideos(data.token);
       loadBillingStatus(data.token);
     } catch (err: any) {
       setSignupError(err.message);
-      refreshCaptcha();
     } finally {
       setSignupLoading(false);
     }
+  };
+
+  const handleResendOtp = async () => {
+    setSignupError(null);
+    setSignupInfo(null);
+    try {
+      const res = await fetch(API + "/auth/resend-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: signupEmail.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Could not resend the code");
+      setResendCooldown(60);
+      setSignupInfo("A new code has been sent to your email.");
+    } catch (err: any) {
+      setSignupError(err.message);
+    }
+  };
+
+  const handleChangeEmail = () => {
+    setSignupStep("form");
+    setSignupOtp("");
+    setSignupError(null);
+    setSignupInfo(null);
   };
 
   const handleSubscribe = async (planKey: "basic" | "premium") => {
@@ -1071,107 +1178,152 @@ function App() {
         <Navbar />
         <div className="auth-screen">
           <div className="auth-card">
-            <h2 className="auth-title">Create Account</h2>
-            <p className="auth-subtitle">
-              Start generating educational videos for free
-            </p>
-            {authNotice && <div className="auth-notice">{authNotice}</div>}
+            {signupStep === "form" ? (
+              <>
+                <h2 className="auth-title">Create Account</h2>
+                <p className="auth-subtitle">
+                  Start generating educational videos for free
+                </p>
+                {authNotice && <div className="auth-notice">{authNotice}</div>}
 
-            <div className="auth-field">
-              <label className="input-label">Full Name</label>
-              <input
-                className="auth-input"
-                type="text"
-                placeholder="Your full name"
-                value={signupName}
-                onChange={(e) => setSignupName(e.target.value)}
-              />
-            </div>
-
-            <div className="auth-field">
-              <label className="input-label">Email</label>
-              <input
-                className="auth-input"
-                type="email"
-                placeholder="you@example.com"
-                value={signupEmail}
-                onChange={(e) => setSignupEmail(e.target.value)}
-              />
-            </div>
-
-            <div className="auth-field">
-              <label className="input-label">New Password</label>
-              <input
-                className="auth-input"
-                type="password"
-                placeholder="At least 6 characters"
-                value={signupPassword}
-                onChange={(e) => setSignupPassword(e.target.value)}
-              />
-            </div>
-
-            <div className="auth-field">
-              <label className="input-label">Confirm Password</label>
-              <input
-                className="auth-input"
-                type="password"
-                placeholder="Re-enter your password"
-                value={signupConfirm}
-                onChange={(e) => setSignupConfirm(e.target.value)}
-              />
-            </div>
-
-            <div className="auth-field">
-              <label className="input-label">Captcha</label>
-              <div className="captcha-row">
-                <div className="captcha-box">
-                  {captcha.a} + {captcha.b} = ?
+                <div className="auth-field">
+                  <label className="input-label">Full Name</label>
+                  <input
+                    className="auth-input"
+                    type="text"
+                    placeholder="Your full name"
+                    value={signupName}
+                    onChange={(e) => setSignupName(e.target.value)}
+                  />
                 </div>
-                <input
-                  className="auth-input"
-                  type="number"
-                  placeholder="Answer"
-                  value={captchaAnswer}
-                  onChange={(e) => setCaptchaAnswer(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSignup()}
-                />
+
+                <div className="auth-field">
+                  <label className="input-label">Email</label>
+                  <input
+                    className="auth-input"
+                    type="email"
+                    placeholder="you@example.com"
+                    value={signupEmail}
+                    onChange={(e) => setSignupEmail(e.target.value)}
+                  />
+                </div>
+
+                <div className="auth-field">
+                  <label className="input-label">New Password</label>
+                  <input
+                    className="auth-input"
+                    type="password"
+                    placeholder="At least 6 characters"
+                    value={signupPassword}
+                    onChange={(e) => setSignupPassword(e.target.value)}
+                  />
+                </div>
+
+                <div className="auth-field">
+                  <label className="input-label">Confirm Password</label>
+                  <input
+                    className="auth-input"
+                    type="password"
+                    placeholder="Re-enter your password"
+                    value={signupConfirm}
+                    onChange={(e) => setSignupConfirm(e.target.value)}
+                  />
+                </div>
+
+                <div className="turnstile-box" ref={turnstileBoxRef} />
+
+                {signupError && (
+                  <div className="auth-error">
+                    {signupError}
+                    {signupError.toLowerCase().includes("already registered") && (
+                      <>
+                        {" "}
+                        <span
+                          className="auth-link"
+                          onClick={() => {
+                            setLoginEmail(signupEmail);
+                            setLoginError(null);
+                            setScreen("login");
+                          }}
+                        >
+                          Go to login
+                        </span>
+                      </>
+                    )}
+                  </div>
+                )}
+
                 <button
-                  type="button"
-                  className="captcha-refresh"
-                  onClick={refreshCaptcha}
-                  title="New captcha"
+                  className="generate-btn"
+                  onClick={handleSendOtp}
+                  disabled={
+                    signupLoading ||
+                    !signupName ||
+                    !signupEmail ||
+                    !signupPassword ||
+                    !signupConfirm ||
+                    !turnstileToken
+                  }
                 >
-                  ↻
+                  {signupLoading ? "Sending code..." : "Send Verification Code"}
                 </button>
-              </div>
-            </div>
 
-            {signupError && <div className="auth-error">{signupError}</div>}
+                <p className="auth-switch">
+                  Already have an account?{" "}
+                  <span className="auth-link" onClick={() => setScreen("login")}>
+                    Login
+                  </span>
+                </p>
+              </>
+            ) : (
+              <>
+                <h2 className="auth-title">Verify Your Email</h2>
+                <p className="auth-subtitle">
+                  We sent a 6-digit code to <strong>{signupEmail}</strong>. Check your inbox (and spam folder).
+                </p>
 
-            <button
-              className="generate-btn"
-              onClick={handleSignup}
-              disabled={
-                signupLoading ||
-                !signupName ||
-                !signupEmail ||
-                !signupPassword ||
-                !signupConfirm ||
-                !captchaAnswer
-              }
-            >
-              {signupLoading ? "Creating account..." : "Create Account"}
-            </button>
+                <div className="auth-field">
+                  <label className="input-label">Verification Code</label>
+                  <input
+                    className="auth-input otp-input"
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={6}
+                    placeholder="000000"
+                    value={signupOtp}
+                    onChange={(e) => setSignupOtp(e.target.value.replace(/\D/g, ""))}
+                    onKeyDown={(e) =>
+                      e.key === "Enter" && signupOtp.length === 6 && handleVerifyOtp()
+                    }
+                  />
+                </div>
 
-            <p className="auth-switch">
-              Already have an account?{" "}
-              <span
-                className="auth-link"
-                onClick={() => setScreen("login")}
-              >
-                Login
-              </span>
-            </p>
+                {signupInfo && <div className="auth-notice">{signupInfo}</div>}
+                {signupError && <div className="auth-error">{signupError}</div>}
+
+                <button
+                  className="generate-btn"
+                  onClick={handleVerifyOtp}
+                  disabled={signupLoading || signupOtp.length !== 6}
+                >
+                  {signupLoading ? "Verifying..." : "Verify & Create Account"}
+                </button>
+
+                <p className="auth-switch">
+                  {resendCooldown > 0 ? (
+                    <>Resend code in {resendCooldown}s</>
+                  ) : (
+                    <span className="auth-link" onClick={handleResendOtp}>
+                      Resend code
+                    </span>
+                  )}
+                  {" · "}
+                  <span className="auth-link" onClick={handleChangeEmail}>
+                    Change email
+                  </span>
+                </p>
+              </>
+            )}
           </div>
         </div>
         <footer className="footer">2026 Vidora - Learn Visually</footer>
