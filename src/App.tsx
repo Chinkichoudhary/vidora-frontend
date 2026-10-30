@@ -5,9 +5,9 @@ import React, {
   useState,
 } from "react";
 import "./App.css";
-
+import VideoEditor from "./VideoEditor";
 type Tab = "text" | "pdf";
-type Screen = "home" | "login" | "signup" | "dashboard" | "pricing" | "article";
+type Screen = "home" | "login" | "signup" | "dashboard" | "pricing" | "article" | "editor";
 
 type ProgressStep = {
   id: string;
@@ -180,7 +180,7 @@ function App() {
 
   const [myVideos, setMyVideos] = useState<VideoRecord[]>([]);
   const [videosLoading, setVideosLoading] = useState(false);
-
+  const [currentJobId, setCurrentJobId] = useState<string | null>(null);
   const [playDemo, setPlayDemo] = useState(false);
   const [authNotice, setAuthNotice] = useState<string | null>(null);
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
@@ -689,6 +689,7 @@ function App() {
       updateStep(1, "active");
 
       const jobId = startData.job_id;
+      setCurrentJobId(jobId);
       const stepIndexFromBackend = (stepName: string): number => {
         if (stepName.includes("Finalizing")) return 4;
         if (stepName.includes("Rendering")) return 3;
@@ -760,6 +761,7 @@ function App() {
   };
 
   const handleReset = () => {
+    setCurrentJobId(null);
     setVideoUrl(null);
     setError(null);
     setSteps(INITIAL_STEPS);
@@ -1418,6 +1420,7 @@ function App() {
                     className="nav-btn"
                     style={{ width: "100%", marginTop: 12 }}
                     onClick={() => {
+                      setCurrentJobId(null);
                       setVideoUrl(video.video_url);
                       setScreen("home");
                     }}
@@ -1433,7 +1436,28 @@ function App() {
       </div>
     );
   }
-
+  if (screen === "editor" && currentJobId && token) {
+    return (
+      <div className="app">
+        <Navbar />
+        <VideoEditor
+          api={API}
+          token={token}
+          jobId={currentJobId}
+          onCancel={() => setScreen("home")}
+          onUpgrade={() => setScreen("pricing")}
+          onSaved={(newJobId, url, seconds) => {
+            setCurrentJobId(newJobId);
+            setVideoUrl(url);
+            setVideoDuration(seconds);
+            setVideoSize(null);
+            setScreen("home");
+          }}
+        />
+        <footer className="footer">2026 Vidora - Learn Visually</footer>
+      </div>
+    );
+  }
   if (videoUrl) {
     const mins = videoDuration ? Math.floor(videoDuration / 60) : 0;
     const secs = videoDuration ? Math.round(videoDuration % 60) : 0;
@@ -1474,6 +1498,11 @@ function App() {
               <button className="download-btn" onClick={handleDownload}>
                 Download MP4
               </button>
+              {currentJobId && (
+                <button className="reset-btn" onClick={() => setScreen("editor")}>
+                  Edit Video
+                </button>
+              )}
               <button className="reset-btn" onClick={handleReset}>
                 Generate Another Video
               </button>
