@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import "./VideoEditor.css";
+import SlideMedia, { CHARACTER_EMOJI } from "./SlideMedia";
 
 type VoiceSource = "ai" | "mine" | null;
 
@@ -175,6 +176,12 @@ const toPayload = (s: EScene) => {
     });
   }
   if (s.type === "IconGridScene") out.iconNames = s.iconNames;
+  out.image_file = s.image_file || null;
+  out.image_pos = s.image_pos || "top-right";
+  out.image_size = s.image_size || 26;
+  out.character = s.character || null;
+  out.char_pos = s.char_pos || "bottom-right";
+  out.char_size = s.char_size || 18;
   return out;
 };
 
@@ -246,7 +253,7 @@ const blobToWav = async (blob: Blob): Promise<{ wav: Blob; seconds: number }> =>
 };
 
 // ---- simplified slide preview ----
-const SlidePreview: React.FC<{ scene: EScene }> = ({ scene: s }) => {
+const SlidePreview: React.FC<{ scene: EScene; api?: string }> = ({ scene: s, api }) => {
   let body: React.ReactNode = null;
   switch (s.type) {
     case "TitleIntro":
@@ -347,6 +354,19 @@ const SlidePreview: React.FC<{ scene: EScene }> = ({ scene: s }) => {
     <div className="ve-slide">
       <span className="ve-slide-badge">{SCHEMA[s.type] ? SCHEMA[s.type].label : s.type}</span>
       {body}
+      {s.image_file && api && (
+        <img
+          className={"ve-ov-img ve-pos-" + (s.image_pos || "top-right")}
+          style={{ width: (s.image_size || 26) + "%" }}
+          src={`${api}/audio/${s.image_file}`}
+          alt=""
+        />
+      )}
+      {s.character && (
+        <span className={"ve-ov-char ve-pos-" + (s.char_pos || "bottom-right")}>
+          {CHARACTER_EMOJI[s.character] || ""}
+        </span>
+      )}
     </div>
   );
 };
@@ -652,6 +672,48 @@ const VideoEditor: React.FC<VideoEditorProps> = ({ api, token, jobId, onCancel, 
     }
   };
 
+  // ---- auto-add a stock photo to every slide that has none ----
+  const autoPhotos = async () => {
+    if (recording || saving) return;
+    const auth = { Authorization: "Bearer " + token };
+    setVoiceError(null);
+    setVoiceBusy("Finding photos for your slides...");
+    let added = 0;
+    try {
+      for (const s of scenes) {
+        if (s.image_file) continue;
+        const r = await fetch(
+          `${api}/edit/${jobId}/photos?q=${encodeURIComponent(sceneSummary(s))}`,
+          { headers: auth }
+        );
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.detail || "Photo search failed");
+        const first = (d.photos || [])[0];
+        if (!first) continue;
+        const u = await fetch(`${api}/edit/${jobId}/use-photo`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...auth },
+          body: JSON.stringify({ url: first.url }),
+        });
+        const ud = await u.json();
+        if (!u.ok) continue;
+        update((prev) =>
+          prev.map((p) =>
+            p.uid === s.uid
+              ? { ...p, image_file: ud.image_file, image_pos: p.image_pos || "top-right", image_size: p.image_size || 26 }
+              : p
+          )
+        );
+        added++;
+      }
+      if (added === 0) setVoiceError("No matching photos were found.");
+    } catch (e: any) {
+      setVoiceError(e.message || "Photo search failed.");
+    } finally {
+      setVoiceBusy(null);
+    }
+  };
+
   // ---- save ----
   const saveEdits = async () => {
     if (!meta) return;
@@ -796,13 +858,16 @@ const VideoEditor: React.FC<VideoEditorProps> = ({ api, token, jobId, onCancel, 
       <div className="ve-top">
         <div>
           <h2 className="ve-title">Edit your video</h2>
-          <p className="ve-muted">Change slides, add your own voice, then Save to render a new version.</p>
+          <p className="ve-muted">Change slides, add your own voice, pictures and characters, then Save to render a new version.</p>
         </div>
         <div className="ve-top-actions">
           <span className="ve-pill">Length {fmtTime(totalSeconds)}</span>
           <span className="ve-pill">{left} of {meta.limit} edit renders left</span>
           <button className="nav-btn outline" disabled={recording || saving} onClick={() => setPreviewIdx(0)}>
             ▶ Play preview
+          </button>
+          <button className="nav-btn outline" disabled={recording || saving || !!voiceBusy} onClick={autoPhotos}>
+            ✨ Auto-add photos
           </button>
           <button className="nav-btn outline" disabled={saving} onClick={handleCancel}>Cancel</button>
           <button
@@ -833,6 +898,8 @@ const VideoEditor: React.FC<VideoEditorProps> = ({ api, token, jobId, onCancel, 
                 <div className="ve-item-meta">
                   {Math.round(s.duration_frames / 30)}s ·{" "}
                   {s.audio_file ? (s.voice_source === "mine" ? "🎙 your voice" : "🔊 AI voice") : "silent"}
+                  {s.image_file ? " · 🖼" : ""}
+                  {s.character ? " · " + (CHARACTER_EMOJI[s.character] || "") : ""}
                 </div>
               </div>
               <div className="ve-item-actions" onClick={(e) => e.stopPropagation()}>
@@ -859,7 +926,7 @@ const VideoEditor: React.FC<VideoEditorProps> = ({ api, token, jobId, onCancel, 
           {cur && def ? (
             <>
               <div className="ve-preview-wrap">
-                <SlidePreview scene={cur} />
+                <SlidePreview scene={cur} api={api} />
                 <p className="ve-muted ve-note">
                   Simplified preview. The final video uses the full animated design.
                 </p>
@@ -872,6 +939,18 @@ const VideoEditor: React.FC<VideoEditorProps> = ({ api, token, jobId, onCancel, 
                   {renderField(f)}
                 </div>
               ))}
+
+              <h3 className="ve-h3">Pictures &amp; characters</h3>
+              <SlideMedia
+                key={cur.uid}
+                api={api}
+                token={token}
+                jobId={jobId}
+                scene={cur}
+                defaultQuery={sceneSummary(cur)}
+                disabled={recording || saving}
+                onChange={(patch) => patchScene(cur.uid, patch)}
+              />
 
               <h3 className="ve-h3">Slide length</h3>
               <div className="ve-duration">
@@ -959,7 +1038,7 @@ const VideoEditor: React.FC<VideoEditorProps> = ({ api, token, jobId, onCancel, 
         <div className="ve-overlay">
           <div className="ve-overlay-card ve-overlay-wide">
             <p className="ve-muted">Slide {previewIdx + 1} of {scenes.length}</p>
-            <SlidePreview scene={scenes[previewIdx]} />
+            <SlidePreview scene={scenes[previewIdx]} api={api} />
             <button className="nav-btn outline" style={{ marginTop: 16 }} onClick={() => setPreviewIdx(null)}>
               Stop preview
             </button>
