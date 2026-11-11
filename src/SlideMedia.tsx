@@ -202,7 +202,7 @@ const SlideMedia: React.FC<Props> = ({ api, token, jobId, scene, defaultQuery, d
             {photos.length > 0 && (
               <div className="ve-photo-grid">
                 {photos.map((p) => (
-                  <img key={p.id} src={p.thumb} alt={"Photo by " + p.photographer} title={"Photo by " + p.photographer} onClick={() => !off && pick(p)} />
+                  <img key={p.id} src={p.thumb} alt={"By " + p.photographer} title={"By " + p.photographer} onClick={() => !off && pick(p)} />
                 ))}
               </div>
             )}
