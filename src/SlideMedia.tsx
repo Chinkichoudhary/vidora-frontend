@@ -149,7 +149,7 @@ const SlideMedia: React.FC<Props> = ({ api, token, jobId, scene, defaultQuery, d
         <div className="ve-label">Picture</div>
         {imageFile ? (
           <div className="ve-media-row">
-            <img className="ve-media-thumb" src={`${api}/audio/${imageFile}`} alt="Slide picture" />
+            <img className="ve-media-thumb" src={`${api}/audio/${imageFile}`} alt="Slide" />
             <div className="ve-media-controls">
               <select className="ve-input" value={imagePos} disabled={off} onChange={(e) => onChange({ image_pos: e.target.value })}>
                 {POSITIONS.map((p) => (
