@@ -1718,3 +1718,15 @@ body {
   min-height: 65px;
   margin-bottom: 20px;
 }
+
+.show-pass {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #94a3b8;
+  font-family: sans-serif;
+  margin: -8px 0 20px;
+  cursor: pointer;
+}
+.show-pass input { accent-color: #6366f1; }

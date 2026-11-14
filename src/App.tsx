@@ -6,6 +6,7 @@ import React, {
 } from "react";
 import "./App.css";
 import VideoEditor from "./VideoEditor";
+
 type Tab = "text" | "pdf";
 type Screen = "home" | "login" | "signup" | "dashboard" | "pricing" | "article" | "editor";
 
@@ -138,8 +139,6 @@ const VOICE_LABELS: Record<string, string> = {
   "ja-JP-KeitaNeural": "Keita (Japanese)",
 };
 
-const TURNSTILE_SITE_KEY = "0x4AAAAAAFqn-0hCsLicsHVx";
-
 function App() {
   const [screen, setScreen] = useState<Screen>("home");
   const [user, setUser] = useState<User | null>(null);
@@ -170,11 +169,9 @@ function App() {
   const [signupConfirm, setSignupConfirm] = useState("");
   const [signupStep, setSignupStep] = useState<"form" | "otp">("form");
   const [signupOtp, setSignupOtp] = useState("");
-  const [turnstileToken, setTurnstileToken] = useState("");
   const [resendCooldown, setResendCooldown] = useState(0);
   const [signupInfo, setSignupInfo] = useState<string | null>(null);
-  const turnstileBoxRef = useRef<HTMLDivElement>(null);
-  const turnstileWidgetId = useRef<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   const [signupError, setSignupError] = useState<string | null>(null);
   const [signupLoading, setSignupLoading] = useState(false);
 
@@ -234,43 +231,6 @@ function App() {
     return () => clearTimeout(t);
   }, [resendCooldown]);
 
-  // Render the Turnstile widget while the signup form is visible
-  useEffect(() => {
-    if (screen !== "signup" || signupStep !== "form") return;
-    let cancelled = false;
-    let timer: ReturnType<typeof setTimeout> | undefined = undefined;
-
-    const tryRender = () => {
-      if (cancelled) return;
-      const w = window as any;
-      if (w.turnstile && turnstileBoxRef.current) {
-        turnstileWidgetId.current = w.turnstile.render(turnstileBoxRef.current, {
-          sitekey: TURNSTILE_SITE_KEY,
-          theme: "dark",
-          callback: (t: string) => setTurnstileToken(t),
-          "expired-callback": () => setTurnstileToken(""),
-          "error-callback": () => setTurnstileToken(""),
-        });
-      } else {
-        timer = setTimeout(tryRender, 300);
-      }
-    };
-    tryRender();
-
-    return () => {
-      cancelled = true;
-      if (timer) clearTimeout(timer);
-      const w = window as any;
-      if (turnstileWidgetId.current && w.turnstile) {
-        try {
-          w.turnstile.remove(turnstileWidgetId.current);
-        } catch {}
-      }
-      turnstileWidgetId.current = null;
-      setTurnstileToken("");
-    };
-  }, [screen, signupStep]);
-
   const saveAuth = (tok: string, usr: User) => {
     setToken(tok);
     setUser(usr);
@@ -304,16 +264,6 @@ function App() {
     setSelectedArticle(article);
     setScreen("article");
     window.scrollTo(0, 0);
-  };
-
-  const resetTurnstile = () => {
-    const w = window as any;
-    if (w.turnstile && turnstileWidgetId.current) {
-      try {
-        w.turnstile.reset(turnstileWidgetId.current);
-      } catch {}
-    }
-    setTurnstileToken("");
   };
 
   const loadMyVideos = async (tok?: string) => {
@@ -426,10 +376,6 @@ function App() {
       setSignupError("Passwords do not match");
       return;
     }
-    if (!turnstileToken) {
-      setSignupError("Please complete the verification check.");
-      return;
-    }
 
     setSignupLoading(true);
     try {
@@ -440,7 +386,6 @@ function App() {
           name: signupName.trim(),
           email: signupEmail.trim(),
           password: signupPassword,
-          turnstile_token: turnstileToken,
         }),
       });
       const data = await res.json();
@@ -451,7 +396,6 @@ function App() {
       setSignupStep("otp");
     } catch (err: any) {
       setSignupError(err.message);
-      resetTurnstile();
     } finally {
       setSignupLoading(false);
     }
@@ -1140,13 +1084,22 @@ function App() {
               <label className="input-label">Password</label>
               <input
                 className="auth-input"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="Your password"
                 value={loginPassword}
                 onChange={(e) => setLoginPassword(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleLogin()}
               />
             </div>
+
+            <label className="show-pass">
+              <input
+                type="checkbox"
+                checked={showPassword}
+                onChange={(e) => setShowPassword(e.target.checked)}
+              />
+              Show password
+            </label>
 
             {loginError && <div className="auth-error">{loginError}</div>}
 
@@ -1214,7 +1167,7 @@ function App() {
                   <label className="input-label">New Password</label>
                   <input
                     className="auth-input"
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     placeholder="At least 6 characters"
                     value={signupPassword}
                     onChange={(e) => setSignupPassword(e.target.value)}
@@ -1225,14 +1178,29 @@ function App() {
                   <label className="input-label">Confirm Password</label>
                   <input
                     className="auth-input"
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     placeholder="Re-enter your password"
                     value={signupConfirm}
                     onChange={(e) => setSignupConfirm(e.target.value)}
+                    onKeyDown={(e) =>
+                      e.key === "Enter" &&
+                      signupName &&
+                      signupEmail &&
+                      signupPassword &&
+                      signupConfirm &&
+                      handleSendOtp()
+                    }
                   />
                 </div>
 
-                <div className="turnstile-box" ref={turnstileBoxRef} />
+                <label className="show-pass">
+                  <input
+                    type="checkbox"
+                    checked={showPassword}
+                    onChange={(e) => setShowPassword(e.target.checked)}
+                  />
+                  Show password
+                </label>
 
                 {signupError && (
                   <div className="auth-error">
@@ -1263,8 +1231,7 @@ function App() {
                     !signupName ||
                     !signupEmail ||
                     !signupPassword ||
-                    !signupConfirm ||
-                    !turnstileToken
+                    !signupConfirm
                   }
                 >
                   {signupLoading ? "Sending code..." : "Send Verification Code"}
@@ -1436,6 +1403,7 @@ function App() {
       </div>
     );
   }
+
   if (screen === "editor" && currentJobId && token) {
     return (
       <div className="app">
@@ -1458,6 +1426,7 @@ function App() {
       </div>
     );
   }
+
   if (videoUrl) {
     const mins = videoDuration ? Math.floor(videoDuration / 60) : 0;
     const secs = videoDuration ? Math.round(videoDuration % 60) : 0;
