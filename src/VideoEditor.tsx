@@ -683,7 +683,7 @@ const VideoEditor: React.FC<VideoEditorProps> = ({ api, token, jobId, onCancel, 
       for (const s of scenes) {
         if (s.image_file) continue;
         const r = await fetch(
-          `${api}/edit/${jobId}/photos?q=${encodeURIComponent(sceneSummary(s))}`,
+          `${api}/edit/${jobId}/photos?style=cartoon&q=${encodeURIComponent(sceneSummary(s).split(/\s+/).slice(0, 4).join(" "))}`,
           { headers: auth }
         );
         const d = await r.json();

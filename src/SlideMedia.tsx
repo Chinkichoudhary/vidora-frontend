@@ -71,7 +71,7 @@ const SlideMedia: React.FC<Props> = ({ api, token, jobId, scene, defaultQuery, d
   const [showSearch, setShowSearch] = useState(false);
   const [query, setQuery] = useState(defaultQuery);
   const [photos, setPhotos] = useState<Photo[]>([]);
-
+  const [style, setStyle] = useState("cartoon");
   const auth = { Authorization: "Bearer " + token };
   const imageFile: string | null = scene.image_file || null;
   const character: string | null = scene.character || null;
@@ -109,7 +109,7 @@ const SlideMedia: React.FC<Props> = ({ api, token, jobId, scene, defaultQuery, d
     setError(null);
     setBusy("Searching photos...");
     try {
-      const res = await fetch(`${api}/edit/${jobId}/photos?q=${encodeURIComponent(query.trim())}`, { headers: auth });
+      const res = await fetch(`${api}/edit/${jobId}/photos?style=${style}&q=${encodeURIComponent(query.trim())}`, { headers: auth });
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || "Search failed");
       setPhotos(data.photos || []);
@@ -198,6 +198,13 @@ const SlideMedia: React.FC<Props> = ({ api, token, jobId, scene, defaultQuery, d
                 onKeyDown={(e) => e.key === "Enter" && search()}
               />
               <button className="nav-btn" disabled={off} onClick={search}>Search</button>
+            </div>
+                        <div className="ve-style-row">
+              {[["cartoon", "Cartoon"], ["sketch", "Sketch"], ["vector", "Vector art"], ["photo", "Photo"]].map(([id, label]) => (
+                <button key={id} className={"ve-chip" + (style === id ? " active" : "")} disabled={off} onClick={() => setStyle(id)}>
+                  {label}
+                </button>
+              ))}
             </div>
             {photos.length > 0 && (
               <div className="ve-photo-grid">

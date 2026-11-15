@@ -98,3 +98,12 @@
 .ve-pos-top-right { right: 3%; top: 6%; }
 .ve-pos-bottom-right { right: 3%; bottom: 8%; }
 .ve-pos-bottom-left { left: 3%; bottom: 8%; }
+
+
+
+.ve-style-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.ve-chip { background: transparent; border: 1px solid rgba(99,102,241,0.4); color: #a5b4fc; border-radius: 16px; font-size: 12px; font-weight: 700; padding: 5px 12px; cursor: pointer; }
+.ve-chip.active { background: rgba(236,72,153,0.15); border-color: #ec4899; color: #f9a8d4; }
+.ve-chip:disabled { opacity: 0.5; cursor: not-allowed; }
+.ve-photo-grid img { background: #fff; object-fit: contain; }
+.ve-ov-img { background: #fff; padding: 4px; object-fit: contain; }
